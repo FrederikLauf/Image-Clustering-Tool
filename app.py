@@ -1,16 +1,15 @@
-from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 import sys
-import gui.gui_form
 
 from matplotlib.backends.backend_qtagg import FigureCanvas
-from matplotlib.backends.backend_qtagg import \
-    NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends.qt_compat import QtWidgets
 from matplotlib.figure import Figure
 import numpy as np
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 import yaml
 
+import gui.gui_form
 import image_clustering as imc
 
 
@@ -43,7 +42,7 @@ class ImageClusteringApp(QtWidgets.QMainWindow, gui.gui_form.Ui_MainWindow):
             self.img_data = imc.get_sklearn_data(self.thumb_array)
             self.selectFolderButton.setText("select folder (currently {})".format(selected_folder))
         return selected_folder
-        
+
     def on_apply_button_clicked(self):
         if self.thumb_array is not None and self.img_data is not None:
             scaler = self.scalerComboBox.currentText()

@@ -1,22 +1,20 @@
+from concurrent.futures import ThreadPoolExecutor
 import os
+
+import cv2
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+import matplotlib.pyplot as plt
 import numpy as np
-from multiprocessing import Pool
+from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 from sklearn.decomposition import PCA, NMF
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler, Normalizer
-from matplotlib.offsetbox import AnnotationBbox, OffsetImage
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
-from concurrent.futures import ThreadPoolExecutor
-import string
 import yaml
-import cv2
 
-scaler_dict = {'Standard': StandardScaler, 'Robust': RobustScaler, 'MinMax': MinMaxScaler, 'Normalizer': Normalizer}
-decomposer_dict = {'PCA': PCA, 'NMF': NMF, 'TSNE': TSNE}
-clusterer_dict = {'KMeans': KMeans, 'Agglomerative': AgglomerativeClustering, 'DBSCAN': DBSCAN}
 
-FOLDER_PATH = r"test_images"
+SCALER_DICT = {'Standard': StandardScaler, 'Robust': RobustScaler, 'MinMax': MinMaxScaler, 'Normalizer': Normalizer}
+DECOMPOSER_DICT = {'PCA': PCA, 'NMF': NMF, 'TSNE': TSNE}
+CLUSTERER_DICT = {'KMeans': KMeans, 'Agglomerative': AgglomerativeClustering, 'DBSCAN': DBSCAN}
 
 def load_images_from_folder(folder):
     files = [file.path for file in os.scandir(folder)]
@@ -78,20 +76,20 @@ def get_workers_from_config():
     if scaler == 'None':
         scaler = None
     else:
-        scaler = scaler_dict[scaler]()
+        scaler = SCALER_DICT[scaler]()
     if decomposer['type'] != 'TSNE':
-        decomposer = decomposer_dict[decomposer['type']](n_components=decomposer['components'])
+        decomposer = DECOMPOSER_DICT[decomposer['type']](n_components=decomposer['components'])
     else:
-        decomposer = decomposer_dict['TSNE']()
+        decomposer = DECOMPOSER_DICT['TSNE']()
     if clusterer['type'] != 'DBSCAN':
-        clusterer = clusterer_dict[clusterer['type']](n_clusters=clusterer['n_clusters'])
+        clusterer = CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
     else:
         clusterer = DBSCAN(min_samples=clusterer['dbscan_min'], eps=clusterer['dbscan_eps'])
 
     return scaler, decomposer, clusterer
 
 def main():
-    image_array = load_images_from_folder(FOLDER_PATH)
+    image_array = load_images_from_folder(r"test_images")
     thumb_array = get_thumbnails(image_array, (150, 100))
     img_data = get_sklearn_data(thumb_array)
 
@@ -102,7 +100,7 @@ def main():
     show_cluster_plot(clusters, data_decomposed, thumb_array)
     
 def main2(ax):
-    image_array = load_images_from_folder(FOLDER_PATH)
+    image_array = load_images_from_folder(r"test_images")
     thumb_array = get_thumbnails(image_array, (150, 100))
     img_data = get_sklearn_data(thumb_array)
 
@@ -114,4 +112,3 @@ def main2(ax):
     
 if __name__ == '__main__':
     main()
-
