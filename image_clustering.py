@@ -21,7 +21,7 @@ def load_images_from_folder(folder):
     with ThreadPoolExecutor() as executor:
         image_array = executor.map(cv2.imread, files)
     return image_array
-    
+
 def get_thumbnails(image_array, size):
     thumbs = np.array([cv2.resize(img, size) for img in image_array])
     thumbs = thumbs / 255
@@ -55,7 +55,7 @@ def show_cluster_plot(clusters, data_decomposed, img_array):
                             bboxprops={'facecolor': color})
         ax.add_artist(ab)                    
     plt.show()
-    
+
 def show_cluster_plot2(ax, clusters, data_decomposed, img_array):
     ax.scatter(data_decomposed[:, 0], data_decomposed[:, 1], c=clusters)
     cmap = plt.get_cmap("gist_rainbow")
@@ -73,19 +73,15 @@ def get_workers_from_config():
     with open('image_clustering_config.yml') as hdl:
         conf = yaml.load(hdl, Loader=yaml.Loader)
     scaler, decomposer, clusterer = conf['scaler'], conf['decomposer'], conf['clusterer']
-    if scaler == 'None':
-        scaler = None
-    else:
-        scaler = SCALER_DICT[scaler]()
-    if decomposer['type'] != 'TSNE':
-        decomposer = DECOMPOSER_DICT[decomposer['type']](n_components=decomposer['components'])
-    else:
+    scaler = None if scaler == 'None' else SCALER_DICT[scaler]()
+    if decomposer['type'] == 'TSNE':
         decomposer = DECOMPOSER_DICT['TSNE']()
-    if clusterer['type'] != 'DBSCAN':
-        clusterer = CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
     else:
+        decomposer = DECOMPOSER_DICT[decomposer['type']](n_components=decomposer['components'])
+    if clusterer['type'] == 'DBSCAN':
         clusterer = DBSCAN(min_samples=clusterer['dbscan_min'], eps=clusterer['dbscan_eps'])
-
+    else:
+        clusterer = CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
     return scaler, decomposer, clusterer
 
 def main():
@@ -98,7 +94,7 @@ def main():
     clusters, data_decomposed = get_clusters(img_data, scaler, decomposer, clusterer)
     
     show_cluster_plot(clusters, data_decomposed, thumb_array)
-    
+
 def main2(ax):
     image_array = load_images_from_folder(r"test_images")
     thumb_array = get_thumbnails(image_array, (150, 100))
@@ -109,6 +105,6 @@ def main2(ax):
     clusters, data_decomposed = get_clusters(img_data, scaler, decomposer, clusterer)
     
     show_cluster_plot2(ax, clusters, data_decomposed, thumb_array)
-    
+
 if __name__ == '__main__':
     main()
