@@ -1,0 +1,9 @@
+clusterer:
+  dbscan_eps: 1
+  dbscan_min: 2
+  n_clusters: 20
+  type: Agglomerative
+decomposer:
+  components: 15
+  type: PCA
+scaler: Standard
