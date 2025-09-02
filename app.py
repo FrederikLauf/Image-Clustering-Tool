@@ -2,18 +2,37 @@ import sys
 
 from matplotlib.backends.backend_qtagg import FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.backends.qt_compat import QtWidgets
+# from matplotlib.backends.qt_compat import QtWidgets
 from matplotlib.figure import Figure
 import numpy as np
-from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QMainWindow
 import yaml
 
 import gui.gui_form
 import image_clustering as imc
 
 
-class ImageClusteringApp(QtWidgets.QMainWindow, gui.gui_form.Ui_MainWindow):
+class ImageLoader(QObject):
+
+    finished = pyqtSignal()
+    thumb_array = pyqtSignal(np.ndarray)
+    image_data = pyqtSignal(np.ndarray)
+    
+    def __init__(self, selected_folder):
+        super().__init__()
+        self.selected_folder = selected_folder
+
+    def load_image_data(self):
+        image_array = imc.load_images_from_folder(self.selected_folder)
+        thumb_array = imc.get_thumbnails(image_array, (150, 100))
+        image_data = imc.get_sklearn_data(thumb_array)
+        self.thumb_array.emit(thumb_array)
+        self.image_data.emit(image_data)
+        self.finished.emit()
+
+class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
+
     def __init__(self, parent=None):
         super(ImageClusteringApp, self).__init__(parent)
         self.setupUi(self)
@@ -21,26 +40,43 @@ class ImageClusteringApp(QtWidgets.QMainWindow, gui.gui_form.Ui_MainWindow):
         self.static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self.matplotlibBaseLayout.addWidget(NavigationToolbar(self.static_canvas, self))
         self.matplotlibBaseLayout.addWidget(self.static_canvas)
-
         self._static_ax = self.static_canvas.figure.subplots()
-        
+
         self.img_data = None
         self.thumb_array = None
+        self.worker = None
+        self.thread = None
+
+    def _handle_thumb_array(self, thumb_array):
+        self.thumb_array = thumb_array
+
+    def _handle_image_data(self, image_data):
+        self.img_data = image_data
 
     def on_select_folder_button_clicked(self):
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle("Select folder")
         file_dialog.setFileMode(QFileDialog.FileMode.Directory)
         file_dialog.setViewMode(QFileDialog.ViewMode.Detail)
-        selected_folder = None
         selected_folder = file_dialog.getExistingDirectory()
-        if selected_folder is not None:
+        if selected_folder != '':
+            self.img_data = None
+            self.thumb_array = None
+            self.selectFolderButton.setEnabled(False)
             self.selectFolderButton.setText("select folder (currently loading {}, please wait)".format(selected_folder))
             self.selectFolderButton.repaint()
-            image_array = imc.load_images_from_folder(selected_folder)
-            self.thumb_array = imc.get_thumbnails(image_array, (150, 100))
-            self.img_data = imc.get_sklearn_data(self.thumb_array)
-            self.selectFolderButton.setText("select folder (currently {})".format(selected_folder))
+            self.worker = ImageLoader(selected_folder)
+            self.thread = QThread()
+            self.worker.moveToThread(self.thread)
+            self.thread.started.connect(self.worker.load_image_data)
+            self.worker.thumb_array.connect(self._handle_thumb_array)
+            self.worker.image_data.connect(self._handle_image_data)
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
+            self.thread.finished.connect(lambda: self.selectFolderButton.setEnabled(True))
+            self.thread.finished.connect(lambda: self.selectFolderButton.setText("select folder (currently {})".format(selected_folder)))
+            self.thread.start()
         return selected_folder
 
     def on_apply_button_clicked(self):
