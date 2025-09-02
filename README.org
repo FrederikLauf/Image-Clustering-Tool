@@ -1,11 +1,11 @@
 * Image Clustering Tool
 A module and GUI for explorative image clustering, using algorithms for unsupervised machine learning provided by scikit-learn.
-The result is visualised on a matplotlib frame as clusters of image thumbnails with coloured frames indicating the cluster membership.
+The result is visualised on a matplotlib frame as clusters of image thumbnails with coloured frames indicating the cluster membership. (N.B.: The first two dimensions of the data is plotted.)
 The GUI is invoked by running app.py.
 ** Input fields on the GUI
 - Scaler :: Select the scaler, which is applied to the data first.
 - Decomposer :: Select the method for reducing the dimensionality of the data.
-  - components :: Enter the number of dimensions for the reduced data (irrelevant for decomposer "TSNE").
+  - components :: Enter the number of dimensions for the reduced data (irrelevant for decomposer "TSNE"). (The visualisation will show only the first two dimensions.)
 - Clusterer :: Select the clustering method.
   - n_clusters :: Enter the desired number of resulting clusters (irrelevant for clusterer "DBSCAN").
   - dbscan_min :: Enter the minimal cluster size for DBSCAN (irrelevant for other clusterers).  
@@ -13,4 +13,4 @@ The GUI is invoked by running app.py.
 - select folder :: Select a folder containing only image files for analysis.
 - apply :: Perform and display clustering analysis on the currently selected images according to the current inputs.
 ** Example screenshot
-TODO
+![til](demo/demo_screenshot.png)
