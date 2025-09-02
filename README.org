@@ -13,4 +13,4 @@ The GUI is invoked by running app.py.
 - select folder :: Select a folder containing only image files for analysis.
 - apply :: Perform and display clustering analysis on the currently selected images according to the current inputs.
 ** Example screenshot
-![til](demo/demo_screenshot.png)
+[[file:demo/demo_screenshot.png]]
