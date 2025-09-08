@@ -45,20 +45,24 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.img_data = None
         self.thumb_array = None
         self.worker = None
-        self.thread = None
+        self.thread = None 
 
     def _handle_thumb_array(self, thumb_array):
         self.thumb_array = thumb_array
 
     def _handle_image_data(self, image_data):
         self.img_data = image_data
-
-    def on_select_folder_button_clicked(self):
+        
+    def _get_folder_path(self):
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle("Select folder")
         file_dialog.setFileMode(QFileDialog.FileMode.Directory)
         file_dialog.setViewMode(QFileDialog.ViewMode.Detail)
         selected_folder = file_dialog.getExistingDirectory()
+        return selected_folder
+
+    def on_select_folder_button_clicked(self):
+        selected_folder = self._get_folder_path()
         if selected_folder != '':
             self.img_data = None
             self.thumb_array = None
