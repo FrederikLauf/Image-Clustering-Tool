@@ -1,5 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 import os
+import shutil
 
 import cv2
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
@@ -21,7 +23,7 @@ def load_images_from_folder(folder):
     Read image files as unint8 and BGR from the given folder
     and return them in a generator.
     """
-    files = [file.path for file in os.scandir(folder)]
+    files = [file.path for file in os.scandir(folder) if os.path.isfile(file.path)]
     with ThreadPoolExecutor() as executor:
         image_array = executor.map(cv2.imread, files)
     return image_array
@@ -109,6 +111,16 @@ def get_workers_from_config():
     else:
         clusterer = CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
     return scaler, decomposer, clusterer
+
+def copy_files_by_clusters(folder, clusters):
+    files = [file for file in os.scandir(folder) if os.path.isfile(file.path)]
+    image_cluster_folder = os.path.join(folder, 'image_clusters_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    os.mkdir(image_cluster_folder)
+    indices = set(clusters)
+    for index in indices:
+        os.mkdir(os.path.join(image_cluster_folder, str(index)))
+    for cluster, file in zip(clusters, files):
+        shutil.copy2(file.path, os.path.join(image_cluster_folder, str(cluster), file.name))
 
 def main():
     image_array = load_images_from_folder(r"test_images")
