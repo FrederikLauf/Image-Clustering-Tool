@@ -1,0 +1,18 @@
+---
+name: Unittest
+run-name: unittest image clustering module
+on: [push]
+
+jobs:
+  unittest_image_clustering:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install pytest
+      - run: python3 -m pip install scikit-learn
+      - run: python3 -m pip install opencv-python-headless
+      - run: python3 -m pip install matplotlib
+      - run: python3 -m pip install pyyaml
+      - run: python3 -m pytest image_clustering_unit_test.py
+        working-directory: ./test
+...
