@@ -42,6 +42,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.matplotlibBaseLayout.addWidget(self.static_canvas)
         self._static_ax = self.static_canvas.figure.subplots()
 
+        self.selected_folder = ''
+        self.current_cluster_labels = np.array([])
         self.img_data = None
         self.thumb_array = None
         self.worker = None
@@ -64,6 +66,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
     def on_select_folder_button_clicked(self):
         selected_folder = self._get_folder_path()
         if selected_folder != '':
+            self.selected_folder = selected_folder
+            self.current_cluster_labels = np.array([])
             self.img_data = None
             self.thumb_array = None
             self.selectFolderButton.setEnabled(False)
@@ -82,6 +86,12 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self.thread.finished.connect(lambda: self.selectFolderButton.setText("select folder (currently {})".format(selected_folder)))
             self.thread.start()
         return selected_folder
+        
+    def on_export_button_clicked(self):
+        if self.selected_folder != '' and list(self.current_cluster_labels) != []:
+            imc.copy_files_by_clusters(self.selected_folder, self.current_cluster_labels)
+        else:
+            self._show_warning_message("No clusters to export. Please select an image folder and apply clustering first.")
 
     def on_apply_button_clicked(self):
         if self.thumb_array is None or self.img_data is None:
@@ -93,6 +103,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         try:
             scaler, decomposer, clusterer = imc.get_workers_from_config()
             clusters, data_decomposed = imc.get_clusters(self.img_data, scaler, decomposer, clusterer)
+            self.current_cluster_labels = clusters
             self._static_ax.cla()
             imc.show_cluster_plot2(self._static_ax, clusters, data_decomposed, self.thumb_array)
             self.static_canvas.draw()

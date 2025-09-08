@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1007, 660)
+        MainWindow.resize(1001, 647)
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -126,6 +126,9 @@ class Ui_MainWindow(object):
         self.applyButton = QtWidgets.QPushButton(parent=self.centralwidget)
         self.applyButton.setObjectName("applyButton")
         self.verticalLayout.addWidget(self.applyButton)
+        self.exportButton = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.exportButton.setObjectName("exportButton")
+        self.verticalLayout.addWidget(self.exportButton)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -134,35 +137,37 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.applyButton.clicked.connect(MainWindow.on_apply_button_clicked) # type: ignore
         self.selectFolderButton.clicked.connect(MainWindow.on_select_folder_button_clicked) # type: ignore
+        self.exportButton.clicked.connect(MainWindow.on_export_button_clicked) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Image Clustering Tool"))
         self.label.setText(_translate("MainWindow", "Scaler"))
-        self.scalerComboBox.setItemText(0, _translate("MainWindow", "Standard"))
+        self.scalerComboBox.setItemText(0, _translate("MainWindow", "Normalizer"))
         self.scalerComboBox.setItemText(1, _translate("MainWindow", "Robust"))
-        self.scalerComboBox.setItemText(2, _translate("MainWindow", "MinMax"))
-        self.scalerComboBox.setItemText(3, _translate("MainWindow", "Normalizer"))
+        self.scalerComboBox.setItemText(2, _translate("MainWindow", "Standard"))
+        self.scalerComboBox.setItemText(3, _translate("MainWindow", "MinMax"))
         self.scalerComboBox.setItemText(4, _translate("MainWindow", "None"))
         self.label_2.setText(_translate("MainWindow", "Decomposer"))
         self.decomposerComboBox.setItemText(0, _translate("MainWindow", "PCA"))
         self.decomposerComboBox.setItemText(1, _translate("MainWindow", "TSNE"))
         self.decomposerComboBox.setItemText(2, _translate("MainWindow", "NMF"))
         self.label_3.setText(_translate("MainWindow", "components"))
-        self.componentsLineEdit.setText(_translate("MainWindow", "3"))
+        self.componentsLineEdit.setText(_translate("MainWindow", "15"))
         self.label_4.setText(_translate("MainWindow", "Clusterer"))
-        self.clustererComboBox.setItemText(0, _translate("MainWindow", "KMeans"))
-        self.clustererComboBox.setItemText(1, _translate("MainWindow", "Agglomerative"))
+        self.clustererComboBox.setItemText(0, _translate("MainWindow", "Agglomerative"))
+        self.clustererComboBox.setItemText(1, _translate("MainWindow", "KMeans"))
         self.clustererComboBox.setItemText(2, _translate("MainWindow", "DBSCAN"))
         self.label_7.setText(_translate("MainWindow", "n_clusters"))
-        self.nClustersLineEdit.setText(_translate("MainWindow", "8"))
+        self.nClustersLineEdit.setText(_translate("MainWindow", "5"))
         self.label_5.setText(_translate("MainWindow", "dbscan_min"))
         self.dbscanMinLineEdit.setText(_translate("MainWindow", "2"))
         self.label_6.setText(_translate("MainWindow", "dbscan_eps"))
         self.dbscanEpsLineEdit.setText(_translate("MainWindow", "1"))
         self.selectFolderButton.setText(_translate("MainWindow", "select folder"))
         self.applyButton.setText(_translate("MainWindow", "apply"))
+        self.exportButton.setText(_translate("MainWindow", "export"))
 
 
 if __name__ == "__main__":

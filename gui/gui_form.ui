@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1007</width>
-    <height>660</height>
+    <width>1001</width>
+    <height>647</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Image Clustering Tool</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -47,7 +47,7 @@
         <widget class="QComboBox" name="scalerComboBox">
          <item>
           <property name="text">
-           <string>Standard</string>
+           <string>Normalizer</string>
           </property>
          </item>
          <item>
@@ -57,12 +57,12 @@
          </item>
          <item>
           <property name="text">
-           <string>MinMax</string>
+           <string>Standard</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Normalizer</string>
+           <string>MinMax</string>
           </property>
          </item>
          <item>
@@ -126,7 +126,7 @@
        <item>
         <widget class="QLineEdit" name="componentsLineEdit">
          <property name="text">
-          <string>3</string>
+          <string>15</string>
          </property>
         </widget>
        </item>
@@ -147,12 +147,12 @@
         <widget class="QComboBox" name="clustererComboBox">
          <item>
           <property name="text">
-           <string>KMeans</string>
+           <string>Agglomerative</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Agglomerative</string>
+           <string>KMeans</string>
           </property>
          </item>
          <item>
@@ -178,7 +178,7 @@
        <item>
         <widget class="QLineEdit" name="nClustersLineEdit">
          <property name="text">
-          <string>8</string>
+          <string>5</string>
          </property>
         </widget>
        </item>
@@ -242,6 +242,13 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QPushButton" name="exportButton">
+      <property name="text">
+       <string>export</string>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -280,9 +287,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>exportButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_export_button_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>500</x>
+     <y>604</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>500</x>
+     <y>323</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_apply_button_clicked()</slot>
   <slot>on_select_folder_button_clicked()</slot>
+  <slot>on_export_button_clicked()</slot>
  </slots>
 </ui>
