@@ -6,6 +6,10 @@ The result is visualised on a matplotlib frame as clusters of image thumbnails w
 The clusters can be exported, i.e. the original images are copied to different subfolders according to their cluster membership.
 
 The GUI is invoked by running app.py.
+
+** Example screenshot
+[[file:demo/demo_screenshot.png]]
+
 ** Input fields on the GUI
 - Scaler :: Select the scaler, which is applied to the data first.
 - Decomposer :: Select the method for reducing the dimensionality of the data.
@@ -16,5 +20,4 @@ The GUI is invoked by running app.py.
   - dbscan_eps :: Enter the eps parameter ("cluster density") for DBSCAN (irrelevant for other clusterers).
 - select folder :: Select a folder containing only image files for analysis.
 - apply :: Perform and display clustering analysis on the currently selected images according to the current inputs.
-** Example screenshot
-[[file:demo/demo_screenshot.png]]
+- export :: Copy the original images into a subfolder of their current folder, distributed over further subfolders according to their cluster membership.
