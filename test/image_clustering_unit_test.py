@@ -7,26 +7,26 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import Normalizer
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import image_clustering as ic
+import image_clustering.image_clustering as ic
 
 
 class TestImageClustering:
     
     def test_load_images_from_folder(self):
-        image_array = ic.load_images_from_folder('test_images')
+        image_array = ic.load_images_from_folder('test_data')
         red_image = list(image_array)[0]
         assert type(red_image) == np.ndarray
         assert np.all(red_image[0, 0] == np.array([0, 0, 255]))
     
     def test_get_thumbnails(self):
-        image_array = ic.load_images_from_folder('test_images')
+        image_array = ic.load_images_from_folder('test_data')
         thumbs = ic.get_thumbnails(image_array, (50, 50))
         red_thumb = thumbs[0]
         assert type(thumbs) == np.ndarray
         assert np.all(red_thumb[0, 0] == np.array([1.0, 0.0, 0.0]))
         
     def test_get_sklearn_data(self):
-        image_array = ic.load_images_from_folder('test_images')
+        image_array = ic.load_images_from_folder('test_data')
         thumbs = ic.get_thumbnails(image_array, (50, 50))
         data = ic.get_sklearn_data(thumbs)
         m, n = data.shape

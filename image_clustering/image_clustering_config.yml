@@ -5,5 +5,5 @@ clusterer:
   type: Agglomerative
 decomposer:
   components: 15
-  type: TSNE
+  type: PCA
 scaler: Normalizer
