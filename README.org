@@ -5,7 +5,7 @@ The result is visualised on a matplotlib frame as clusters of image thumbnails w
 
 The clusters can be exported, i.e. the original images are copied to different subfolders according to their cluster membership.
 
-The GUI is invoked by running app.py.
+The GUI is invoked by running image_clustering_app.py.
 
 ** Example screenshot
 [[file:demo/demo_screenshot.png]]
