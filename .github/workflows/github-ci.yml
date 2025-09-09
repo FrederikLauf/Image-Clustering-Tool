@@ -1,10 +1,10 @@
 ---
-name: Unittest
-run-name: unittest image clustering module
+name: Unit Test
+run-name: unit test
 on: [push]
 
 jobs:
-  unittest_image_clustering:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

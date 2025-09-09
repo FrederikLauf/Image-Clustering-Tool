@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QMainWindow
 import yaml
 
 import gui.gui_form
-import image_clustering as imc
+import image_clustering.image_clustering as imc
 
 
 class ImageLoader(QObject):
