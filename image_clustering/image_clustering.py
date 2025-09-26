@@ -17,6 +17,7 @@ import yaml
 SCALER_DICT = {'Standard': StandardScaler, 'Robust': RobustScaler, 'MinMax': MinMaxScaler, 'Normalizer': Normalizer}
 DECOMPOSER_DICT = {'PCA': PCA, 'NMF': NMF, 'TSNE': TSNE}
 CLUSTERER_DICT = {'KMeans': KMeans, 'Agglomerative': AgglomerativeClustering, 'DBSCAN': DBSCAN}
+FILE_TYPES = ['bmp', 'pbm', 'pgm', 'ppm', 'sr', 'ras', 'jpeg', 'jpg', 'jpe', 'jp2', 'tiff', 'tif', 'png']
 
 def load_images_from_folder(folder):
     """
@@ -24,6 +25,7 @@ def load_images_from_folder(folder):
     and return them in a generator.
     """
     files = [file.path for file in os.scandir(folder) if os.path.isfile(file.path)]
+    files = [path for path in files if path.split('.')[-1].lower() in FILE_TYPES]
     with ThreadPoolExecutor() as executor:
         image_array = executor.map(cv2.imread, files)
     return image_array
@@ -76,13 +78,13 @@ def show_cluster_plot(clusters, data_decomposed, img_array):
         ax.add_artist(ab)                    
     plt.show()
 
-def show_cluster_plot2(ax, clusters, data_decomposed, img_array):
+def show_cluster_plot2(ax, clusters, data_decomposed, x, y, img_array):
     """
     Visualise the result of a cluster analysis based on cluster labels,
     the dimensionally reduced data and the original image array
     and using the given matplotlib Axes. 
     """
-    ax.scatter(data_decomposed[:, 0], data_decomposed[:, 1], c=clusters)
+    ax.scatter(data_decomposed[:, x], data_decomposed[:, y], c=clusters)
     cmap = plt.get_cmap("gist_rainbow")
     colors = cmap(np.linspace(0, 1, max(clusters) + 1))
     for idx, img in enumerate(img_array):
@@ -90,7 +92,7 @@ def show_cluster_plot2(ax, clusters, data_decomposed, img_array):
         image_box = OffsetImage(img, zoom=0.4)
         image_box.image.axes = ax
         ab = AnnotationBbox(image_box,
-                            (data_decomposed[idx, 0], data_decomposed[idx, 1]),
+                            (data_decomposed[idx, x], data_decomposed[idx, y]),
                             bboxprops={'facecolor': color})
         ax.add_artist(ab)
 

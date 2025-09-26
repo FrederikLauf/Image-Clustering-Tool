@@ -43,7 +43,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self._static_ax = self.static_canvas.figure.subplots()
 
         self.selected_folder = ''
-        self.current_cluster_labels = np.array([])
+        self.current_cluster_labels = None
+        self.data_decomposed = None
         self.img_data = None
         self.thumb_array = None
         self.worker = None
@@ -64,10 +65,10 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         return selected_folder
 
     def on_select_folder_button_clicked(self):
-        selected_folder = self._get_folder_path()
+        selected_folder = self._get_folder_path()  # TEST not empty
         if selected_folder != '':
             self.selected_folder = selected_folder
-            self.current_cluster_labels = np.array([])
+            self.current_cluster_labels = None
             self.img_data = None
             self.thumb_array = None
             self.selectFolderButton.setEnabled(False)
@@ -88,13 +89,13 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         return selected_folder
         
     def on_export_button_clicked(self):
-        if self.selected_folder != '' and list(self.current_cluster_labels) != []:
+        if self.selected_folder != '' and self.current_cluster_labels is not None:
             imc.copy_files_by_clusters(self.selected_folder, self.current_cluster_labels)
         else:
             self._show_warning_message("No clusters to export. Please select an image folder and apply clustering first.")
 
     def on_apply_button_clicked(self):
-        if self.thumb_array is None or self.img_data is None:
+        if self.thumb_array is None or self.img_data is None:  # TEST not empty
             self._show_warning_message("No data to analyse. Please select an image folder first.")
             return
         config = self._make_config_from_input()
@@ -104,11 +105,33 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             scaler, decomposer, clusterer = imc.get_workers_from_config()
             clusters, data_decomposed = imc.get_clusters(self.img_data, scaler, decomposer, clusterer)
             self.current_cluster_labels = clusters
-            self._static_ax.cla()
-            imc.show_cluster_plot2(self._static_ax, clusters, data_decomposed, self.thumb_array)
-            self.static_canvas.draw()
+            self.data_decomposed = data_decomposed
+            components = len(self.data_decomposed[0])  # TEST not empty
+            self.xDimensionScrollbar.setValue(0)  # TEST range
+            self.yDimensionScrollbar.setValue(1)  # TEST range
+            self.xDimensionScrollbar.setMaximum(components - 1)
+            self.yDimensionScrollbar.setMaximum(components - 1)
+            self._plot_clusters()
         except Exception as e:
             self._show_warning_message("Image clustering failed. Please adjust input parameters. (Hint: {})".format(e))
+
+    def _plot_clusters(self):
+        if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
+            x = self.xDimensionScrollbar.value()
+            y = self.yDimensionScrollbar.value()
+            self._static_ax.cla()
+            imc.show_cluster_plot2(self._static_ax,
+                                   self.current_cluster_labels, self.data_decomposed,
+                                   x, y, self.thumb_array)
+            self.static_canvas.draw()
+
+    def on_x_dimension_scrollbar_changed(self, new_value):
+        self.xDimensionLabel.setText(str(new_value))
+        self._plot_clusters()
+        
+    def on_y_dimension_scrollbar_changed(self, new_value):
+        self.yDimensionLabel.setText(str(new_value))
+        self._plot_clusters()
 
     def _make_config_from_input(self):
         try:
