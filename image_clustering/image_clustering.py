@@ -43,6 +43,8 @@ def get_sklearn_data(img_array):
     """
     Return an array of flattened images from an image array.
     """
+    if len(img_array) == 0:
+        return np.array([])
     img_array = img_array.reshape((img_array.shape[0], -1))
     return img_array
 

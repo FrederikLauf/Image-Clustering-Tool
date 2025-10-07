@@ -1,7 +1,8 @@
 * Image Clustering Tool
 A module and GUI for explorative image clustering, using algorithms for unsupervised machine learning provided by scikit-learn.
 
-The result is visualised on a matplotlib frame as clusters of image thumbnails with coloured frames indicating the cluster membership. (The first two dimensions of the data are plotted.)
+The result is visualised on a matplotlib frame as clusters of image thumbnails with coloured frames indicating the cluster membership.
+(The plot is two-dimensional, but the viewing direction onto the higher-dimensional data can be selected with scrollbars.)
 
 The clusters can be exported, i.e. the original images are copied to different subfolders according to their cluster membership.
 
@@ -10,10 +11,10 @@ The GUI is invoked by running image_clustering_app.py.
 ** Example screenshot
 [[file:demo/demo_screenshot.png]]
 
-** Input fields on the GUI
+** Input fields and other control elements on the GUI
 - Scaler :: Select the scaler, which is applied to the data first.
 - Decomposer :: Select the method for reducing the dimensionality of the data.
-  - components :: Enter the number of dimensions for the reduced data (irrelevant for decomposer "TSNE"). (The visualisation will show only the first two dimensions.)
+  - components :: Enter the number of dimensions for the reduced data (irrelevant for decomposer "TSNE").
 - Clusterer :: Select the clustering method.
   - n_clusters :: Enter the desired number of resulting clusters (irrelevant for clusterer "DBSCAN").
   - dbscan_min :: Enter the minimal cluster size for DBSCAN (irrelevant for other clusterers).  
@@ -21,3 +22,4 @@ The GUI is invoked by running image_clustering_app.py.
 - select folder :: Select a folder containing only image files for analysis.
 - apply :: Perform and display clustering analysis on the currently selected images according to the current inputs.
 - export :: Copy the original images into a subfolder of their current folder, distributed over further subfolders according to their cluster membership.
+- scrollbars :: Select the dimension of the reduced data to be displayed on the respective axis of the plot.
