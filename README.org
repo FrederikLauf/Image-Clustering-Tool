@@ -1,10 +1,12 @@
 * Image Clustering Tool
-A module and GUI for explorative image clustering, using algorithms for unsupervised machine learning provided by scikit-learn.
+A tool for explorative image clustering, using algorithms for unsupervised machine learning provided by scikit-learn.
 
 The result is visualised on a matplotlib frame as clusters of image thumbnails with coloured frames indicating the cluster membership.
-(The plot is two-dimensional, but the viewing direction onto the higher-dimensional data can be selected with scrollbars.)
+(The plot is two-dimensional, but the viewing direction onto the higher-dimensional data can be selected via scrollbars.)
 
 The clusters can be exported, i.e. the original images are copied to different subfolders according to their cluster membership.
+
+By clicking on a representative of a cluster, this cluster is singled out and re-plotted with adapted scaling, for better inspection. (The original view is recovered by clicking on "apply" or using the scoll bars.)
 
 The GUI is invoked by running image_clustering_app.py.
 
