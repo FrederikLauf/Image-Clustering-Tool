@@ -39,6 +39,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.setupUi(self)
         # init canvas
         self.static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+        self.static_canvas.mpl_connect('pick_event', self._on_cluster_representative_clicked)
         self.matplotlibBaseLayout.addWidget(NavigationToolbar(self.static_canvas, self))
         self.matplotlibBaseLayout.addWidget(self.static_canvas)
         self._static_ax = self.static_canvas.figure.subplots()
@@ -52,6 +53,11 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.thread = None
 
     # ---------utility methods-----------------------------------------------------------------
+
+    def _on_cluster_representative_clicked(self, event):
+        thumb = event.artist
+        cluster = thumb.get_gid()
+        self._plot_single_cluster(cluster)
 
     def _handle_thumb_array(self, thumb_array):
         self.thumb_array = thumb_array
@@ -102,6 +108,16 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             imc.show_cluster_plot2(self._static_ax,
                                    self.current_cluster_labels, self.data_decomposed,
                                    x, y, self.thumb_array)
+            self.static_canvas.draw()
+            
+    def _plot_single_cluster(self, cluster_number):
+        if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
+            x = self.xDimensionScrollbar.value()
+            y = self.yDimensionScrollbar.value()
+            self._static_ax.cla()
+            imc.show_cluster_plot_for_cluster(self._static_ax,
+                                              self.current_cluster_labels, self.data_decomposed,
+                                              x, y, self.thumb_array, cluster_number)
             self.static_canvas.draw()
 
     # ---------callback methods-----------------------------------------------------------------

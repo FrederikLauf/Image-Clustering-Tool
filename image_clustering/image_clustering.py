@@ -80,22 +80,42 @@ def show_cluster_plot(clusters, data_decomposed, img_array):
         ax.add_artist(ab)                    
     plt.show()
 
-def show_cluster_plot2(ax, clusters, data_decomposed, x, y, img_array):
+def show_cluster_plot2(ax, clusters, data, x, y, img_array):
     """
     Visualise the result of a cluster analysis based on cluster labels,
     the dimensionally reduced data and the original image array
     and using the given matplotlib Axes. 
     """
-    ax.scatter(data_decomposed[:, x], data_decomposed[:, y], c=clusters)
+    ax.scatter(data[:, x], data[:, y], c=clusters)
     cmap = plt.get_cmap("gist_rainbow")
     colors = cmap(np.linspace(0, 1, max(clusters) + 1))
     for idx, img in enumerate(img_array):
         color = colors[clusters[idx]] if clusters[idx] != -1 else 'white'
         image_box = OffsetImage(img, zoom=0.4)
         image_box.image.axes = ax
-        ab = AnnotationBbox(image_box,
-                            (data_decomposed[idx, x], data_decomposed[idx, y]),
-                            bboxprops={'facecolor': color})
+        ab = AnnotationBbox(image_box, (data[idx, x], data[idx, y]), bboxprops={'facecolor': color})
+        ab.set_picker(True)
+        ab.set_gid(clusters[idx])
+        ax.add_artist(ab)
+        
+def show_cluster_plot_for_cluster(ax, clusters, data, x, y, img_array, cluster_number):
+    """
+    Visualise the result of a cluster analysis based on cluster labels,
+    the dimensionally reduced data and the original image array
+    and using the given matplotlib Axes. 
+    """
+    data_filtered = data[clusters == cluster_number]
+    img_array_filtered = img_array[clusters == cluster_number]
+    ax.scatter(data_filtered[:, x], data_filtered[:, y])  # , c=clusters)
+    # cmap = plt.get_cmap("gist_rainbow")
+    # colors = cmap(np.linspace(0, 1, max(clusters) + 1))
+    for idx, img in enumerate(img_array_filtered):
+        # color = colors[clusters[idx]] if clusters[idx] != -1 else 'white'
+        image_box = OffsetImage(img, zoom=0.4)
+        image_box.image.axes = ax
+        ab = AnnotationBbox(image_box, (data_filtered[idx, x], data_filtered[idx, y]))  # , bboxprops={'facecolor': color})
+        # ab.set_picker(True)
+        # ab.set_gid(clusters[idx])
         ax.add_artist(ab)
 
 def get_workers_from_config():
