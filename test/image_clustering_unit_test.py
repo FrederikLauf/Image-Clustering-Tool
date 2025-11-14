@@ -33,7 +33,8 @@ class TestImageClustering:
         assert (m, n) == (1, 7500)
         
     def test_get_workers_from_config(self):
-        scaler, decomposer, clusterer = ic.get_workers_from_config()
+        icc = ic.ImageClusteringConfiguration.from_config_file()
+        scaler, decomposer, clusterer = icc.scaler, icc.decomposer, icc.clusterer
         assert type(scaler) == Normalizer
         assert type(decomposer) == PCA
         assert decomposer.n_components == 15
