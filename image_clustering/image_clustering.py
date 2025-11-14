@@ -27,11 +27,11 @@ class ImageClusteringConfiguration:
         self.scaler = scaler
         self.decomposer = decomposer
         self.clusterer = clusterer
-        
+
     @classmethod
     def from_config_file(cls):
         return cls(*cls.get_workers_from_config())
-    
+
     @classmethod
     def get_workers_from_config(cls):
         """
@@ -43,12 +43,12 @@ class ImageClusteringConfiguration:
         scaler = cls._init_scaler(conf)
         decomposer = cls._init_decomposer(conf)
         return scaler, decomposer, clusterer
-    
+
     @staticmethod
     def _init_scaler(conf):
         scaler = conf['scaler']
         return None if scaler == 'None' else SCALER_DICT[scaler]()
-    
+
     @staticmethod
     def _init_decomposer(conf):
         decomposer = conf['decomposer']
@@ -56,7 +56,7 @@ class ImageClusteringConfiguration:
             return DECOMPOSER_DICT['TSNE']()
         else:
             return DECOMPOSER_DICT[decomposer['type']](n_components=decomposer['components'])
-    
+
     @staticmethod
     def _init_clusterer(conf):
         clusterer = conf['clusterer']
@@ -77,6 +77,7 @@ def load_images_from_folder(folder):
         image_array = executor.map(cv2.imread, files)
     return image_array
 
+
 def get_thumbnails(image_array, size):
     """ 
     image_array: iterable of uint8 BGR images
@@ -88,6 +89,7 @@ def get_thumbnails(image_array, size):
     thumbs = np.flip(thumbs, -1)    
     return thumbs
 
+
 def get_sklearn_data(img_arr):
     """
     Return an array of flattened images from an image array.
@@ -95,6 +97,7 @@ def get_sklearn_data(img_arr):
     if len(img_arr) == 0:
         return np.array([])
     return img_arr.reshape((img_arr.shape[0], -1))
+
 
 def get_clusters(data, scaler, decomposer, clusterer):
     """
@@ -105,6 +108,7 @@ def get_clusters(data, scaler, decomposer, clusterer):
     data_decomposed = decomposer.fit_transform(data_scaled)
     clusters = clusterer.fit_predict(data_decomposed)
     return clusters, data_decomposed
+
 
 def show_cluster_plot2(ax, cluster_labels, data, x, y, img_array, display_scale):
     """
@@ -124,6 +128,7 @@ def show_cluster_plot2(ax, cluster_labels, data, x, y, img_array, display_scale)
         ab.set_gid(cluster_labels[i])
         ax.add_artist(ab)
 
+
 def show_cluster_plot_for_cluster(ax, clusters, data, x, y, img_array, cluster_number, display_scale):
     """
     Visualise the result of a cluster analysis for on selected cluster,
@@ -133,13 +138,14 @@ def show_cluster_plot_for_cluster(ax, clusters, data, x, y, img_array, cluster_n
     data = data[clusters == cluster_number]
     img_array = img_array[clusters == cluster_number]
     ax.scatter(data[:, x], data[:, y])  # needed to set plot range
-    for idx, img in enumerate(img_array):
+    for i, img in enumerate(img_array):
         image_box = OffsetImage(img, zoom=display_scale)
         image_box.image.axes = ax
-        ab = AnnotationBbox(image_box, (data[idx, x], data[idx, y]))
+        ab = AnnotationBbox(image_box, (data[i, x], data[i, y]))
         ab.set_picker(False)
-        ab.set_gid(cluster_number)
+        ab.set_gid(i)
         ax.add_artist(ab)
+
 
 def copy_files_by_clusters(folder, clusters):
     files = [file for file in os.scandir(folder) if os.path.isfile(file.path)]
@@ -153,7 +159,7 @@ def copy_files_by_clusters(folder, clusters):
 
 
 if __name__ == '__main__':
-    # cProfile.run('icc = ImageClusteringConfiguration.from_config_file()', sort='time')
-    icc = ImageClusteringConfiguration.from_config_file()
-    print(icc)
-    print(icc.scaler, icc.decomposer, icc.clusterer)
+    image_array = load_images_from_folder(r"C:\Users\Frederik\Pictures\Fremde\Berlin")
+    orig = np.array(list(image_array))
+    thumbs = get_thumbnails(image_array, (150, 100))
+    # print(thumbs)

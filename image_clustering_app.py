@@ -1,5 +1,6 @@
 import sys
 
+import cv2
 from matplotlib.backends.backend_qtagg import FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 # from matplotlib.backends.qt_compat import QtWidgets
@@ -17,8 +18,9 @@ class ImageLoader(QObject):
 
     finished = pyqtSignal()
     thumb_array = pyqtSignal(np.ndarray)
+    orig_array = pyqtSignal(list)
     image_data = pyqtSignal(np.ndarray)
-    
+
     def __init__(self, selected_folder, image_scaling):
         super().__init__()
         self.selected_folder = selected_folder
@@ -28,9 +30,11 @@ class ImageLoader(QObject):
         image_array = imc.load_images_from_folder(self.selected_folder)
         m = self.image_scaling
         n = int(2 * m / 3)
-        thumb_array = imc.get_thumbnails(image_array, (m, n))
+        orig_array = list(image_array)
+        thumb_array = imc.get_thumbnails(orig_array, (m, n))
         image_data = imc.get_sklearn_data(thumb_array)
         self.thumb_array.emit(thumb_array)
+        self.orig_array.emit(orig_array)
         self.image_data.emit(image_data)
         self.finished.emit()
 
@@ -53,6 +57,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.data_decomposed = None
         self.img_data = None
         self.thumb_array = None
+        self.orig_array = None
         self.worker = None
         self.thread = None
         # init state
@@ -61,17 +66,30 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
     # ---------utility methods-----------------------------------------------------------------
 
     def _on_cluster_representative_clicked(self, event):
-        thumb = event.artist
-        cluster = thumb.get_gid()
-        self._plot_single_cluster(cluster)
-        self.display_state = ['single', cluster]
-    
+        if self.display_state[0] == 'all':
+            thumb = event.artist
+            cluster = thumb.get_gid()
+            self._plot_single_cluster(cluster)
+            self.display_state = ['single', cluster]
+        elif self.display_state[0] == 'single':
+            cluster = self.display_state[1]
+            thumb = event.artist
+            i = thumb.get_gid()
+            filtered_orig_array = []
+            for idx, img in enumerate(self.orig_array):
+                if self.current_cluster_labels[idx] == cluster:
+                    filtered_orig_array.append(img)
+            image = filtered_orig_array[i]
+            cv2.namedWindow("Image_" + str(i), cv2.WINDOW_NORMAL)
+            cv2.imshow("Image_" + str(i), image)
+            cv2.waitKey(1)
+
     def _show_warning_message(self, text):
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Warning")
         msg_box.setText(text)
         msg_box.exec()
-    
+
     def _get_folder_path(self):
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle("Select folder")
@@ -113,7 +131,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
                                    self.current_cluster_labels, self.data_decomposed,
                                    x, y, self.thumb_array, display_scale)
             self.static_canvas.draw()
-            
+
     def _plot_single_cluster(self, cluster_number):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
             x = self.xDimensionScrollbar.value()
@@ -124,26 +142,29 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
                                               self.current_cluster_labels, self.data_decomposed,
                                               x, y, self.thumb_array, cluster_number, display_scale)
             self.static_canvas.draw()
-            
+
     def _plot_cluster_view(self):
         if self.display_state[0] == 'all':
             self._plot_all_clusters()
         elif self.display_state[0] == 'single':
             self._plot_single_cluster(self.display_state[1])
+            
+    def _deinit_data_and_view(self):
+        self._static_ax.cla()
+        self.static_canvas.draw()
+        self.current_cluster_labels = None
+        self.img_data = None
+        self.thumb_array = None
+        self.orig_array = None
+        self.display_state = ['all', None]
 
     # ---------callback methods-----------------------------------------------------------------
 
     def on_select_folder_button_clicked(self):
         selected_folder = self._get_folder_path()  # TEST empty folder
         if selected_folder is not None:
+            self._deinit_data_and_view()
             self.selected_folder = selected_folder
-            # erase plot and data
-            self._static_ax.cla()
-            self.static_canvas.draw()
-            self.current_cluster_labels = None
-            self.img_data = None
-            self.thumb_array = None
-            self.display_state = ['all', None]
             # initiate loading of images
             self.selectFolderButton.setEnabled(False)
             self.selectFolderButton.setText("select folder (currently loading {}, please wait)".format(selected_folder))
@@ -154,6 +175,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.load_image_data)
             self.worker.thumb_array.connect(lambda data: setattr(self, 'thumb_array', data))
+            self.worker.orig_array.connect(lambda data: setattr(self, 'orig_array', data))
             self.worker.image_data.connect(lambda data: setattr(self, 'img_data', data))
             self.worker.finished.connect(self.thread.quit)
             self.worker.finished.connect(self.worker.deleteLater)
@@ -193,15 +215,15 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
     def on_x_dimension_scrollbar_changed(self, new_value):
         self.xDimensionLabel.setText(str(new_value))
         self._plot_cluster_view()
-        
+
     def on_y_dimension_scrollbar_changed(self, new_value):
         self.yDimensionLabel.setText(str(new_value))
         self._plot_cluster_view()
-        
+
     def on_display_scaling_slider_changed(self, new_value):
         self.displayScalingLabel.setText(str(new_value / 100))
         self._plot_cluster_view()
-            
+
     def on_prescaling_slider_changed(self, new_value):
         self.preScalingLabel.setText(str(new_value))
 
