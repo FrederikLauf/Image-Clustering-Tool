@@ -18,7 +18,52 @@ import yaml
 SCALER_DICT = {'Standard': StandardScaler, 'Robust': RobustScaler, 'MinMax': MinMaxScaler, 'Normalizer': Normalizer}
 DECOMPOSER_DICT = {'PCA': PCA, 'NMF': NMF, 'TSNE': TSNE}
 CLUSTERER_DICT = {'KMeans': KMeans, 'Agglomerative': AgglomerativeClustering, 'DBSCAN': DBSCAN}
-FILE_TYPES = ['bmp', 'pbm', 'pgm', 'ppm', 'sr', 'ras', 'jpeg', 'jpg', 'jpe', 'jp2', 'tiff', 'tif', 'png']
+FILE_TYPES = ['bmp', 'pbm', 'pgm', 'ppm', 'sr', 'ras', 'jpeg', 'jpg', 'jpe', 'jp2', 'tiff', 'tif', 'png'] 
+
+
+class ImageClusteringConfiguration:
+
+    def __init__(self, scaler, decomposer, clusterer):
+        self.scaler = scaler
+        self.decomposer = decomposer
+        self.clusterer = clusterer
+        
+    @classmethod
+    def from_config_file(cls):
+        return cls(*cls.get_workers_from_config())
+    
+    @classmethod
+    def get_workers_from_config(cls):
+        """
+        Return initialised scaler, decomposer and clusterer as given in the config file.
+        """
+        with open('image_clustering_config.yml') as hdl:
+            conf = yaml.load(hdl, Loader=yaml.Loader)
+        clusterer = cls._init_clusterer(conf)
+        scaler = cls._init_scaler(conf)
+        decomposer = cls._init_decomposer(conf)
+        return scaler, decomposer, clusterer
+    
+    @staticmethod
+    def _init_scaler(conf):
+        scaler = conf['scaler']
+        return None if scaler == 'None' else SCALER_DICT[scaler]()
+    
+    @staticmethod
+    def _init_decomposer(conf):
+        decomposer = conf['decomposer']
+        if decomposer['type'] == 'TSNE':
+            return DECOMPOSER_DICT['TSNE']()
+        else:
+            return DECOMPOSER_DICT[decomposer['type']](n_components=decomposer['components'])
+    
+    @staticmethod
+    def _init_clusterer(conf):
+        clusterer = conf['clusterer']
+        if clusterer['type'] == 'DBSCAN':
+            return DBSCAN(min_samples=clusterer['dbscan_min'], eps=clusterer['dbscan_eps'])
+        else:
+            return CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
 
 
 def load_images_from_folder(folder):
@@ -96,35 +141,6 @@ def show_cluster_plot_for_cluster(ax, clusters, data, x, y, img_array, cluster_n
         ab.set_gid(cluster_number)
         ax.add_artist(ab)
 
-def get_workers_from_config():
-    """
-    Return initialised scaler, decomposer and clusterer as given in the config file.
-    """
-    with open('image_clustering_config.yml') as hdl:
-        conf = yaml.load(hdl, Loader=yaml.Loader)
-    clusterer = _init_clusterer(conf)
-    scaler = _init_scaler(conf)
-    decomposer = _init_decomposer(conf)
-    return scaler, decomposer, clusterer
-
-def _init_scaler(conf):
-    scaler = conf['scaler']
-    return None if scaler == 'None' else SCALER_DICT[scaler]()
-    
-def _init_decomposer(conf):
-    decomposer = conf['decomposer']
-    if decomposer['type'] == 'TSNE':
-        return DECOMPOSER_DICT['TSNE']()
-    else:
-        return DECOMPOSER_DICT[decomposer['type']](n_components=decomposer['components'])
-        
-def _init_clusterer(conf):
-    clusterer = conf['clusterer']
-    if clusterer['type'] == 'DBSCAN':
-        return DBSCAN(min_samples=clusterer['dbscan_min'], eps=clusterer['dbscan_eps'])
-    else:
-        return CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
-
 def copy_files_by_clusters(folder, clusters):
     files = [file for file in os.scandir(folder) if os.path.isfile(file.path)]
     image_cluster_folder = os.path.join(folder, 'image_clusters_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
@@ -135,13 +151,9 @@ def copy_files_by_clusters(folder, clusters):
     for cluster, file in zip(clusters, files):
         shutil.copy2(file.path, os.path.join(image_cluster_folder, str(cluster), file.name))
 
-def main2(ax):
-    image_array = load_images_from_folder(r"test_images")
-    thumb_array = get_thumbnails(image_array, (150, 100))
-    img_data = get_sklearn_data(thumb_array)
-    scaler, decomposer, clusterer = get_workers_from_config()
-    clusters, data_decomposed = get_clusters(img_data, scaler, decomposer, clusterer)
-    show_cluster_plot2(ax, clusters, data_decomposed, thumb_array)
 
 if __name__ == '__main__':
-    main()
+    # cProfile.run('icc = ImageClusteringConfiguration.from_config_file()', sort='time')
+    icc = ImageClusteringConfiguration.from_config_file()
+    print(icc)
+    print(icc.scaler, icc.decomposer, icc.clusterer)

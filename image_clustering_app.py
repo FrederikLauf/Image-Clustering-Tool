@@ -177,8 +177,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         if config is None:
             return
         try:
-            scaler, decomposer, clusterer = imc.get_workers_from_config()
-            clusters, data_decomposed = imc.get_clusters(self.img_data, scaler, decomposer, clusterer)
+            icc = imc.ImageClusteringConfiguration.from_config_file()
+            clusters, data_decomposed = imc.get_clusters(self.img_data, icc.scaler, icc.decomposer, icc.clusterer)
             self.current_cluster_labels = clusters
             self.data_decomposed = data_decomposed
             components = len(self.data_decomposed[0])
