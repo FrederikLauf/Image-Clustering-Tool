@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import os
 import shutil
+from typing import Iterable
 
 import cv2
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
@@ -19,9 +20,10 @@ DECOMPOSER_DICT = {'PCA': PCA, 'NMF': NMF, 'TSNE': TSNE}
 CLUSTERER_DICT = {'KMeans': KMeans, 'Agglomerative': AgglomerativeClustering, 'DBSCAN': DBSCAN}
 FILE_TYPES = ['bmp', 'pbm', 'pgm', 'ppm', 'sr', 'ras', 'jpeg', 'jpg', 'jpe', 'jp2', 'tiff', 'tif', 'png']
 
+
 def load_images_from_folder(folder):
     """
-    Read image files as unint8 and BGR from the given folder
+    Read image files as uint8 and BGR from the given folder
     and return them in a generator.
     """
     files = [file.path for file in os.scandir(folder) if os.path.isfile(file.path)]
@@ -31,91 +33,67 @@ def load_images_from_folder(folder):
     return image_array
 
 def get_thumbnails(image_array, size):
-    """
-    Return a numpy array of resized images (float, RGB) from a given image iterable.
+    """ 
+    image_array: iterable of uint8 BGR images
+    size: tuple of desired image size (width, height) in pixels
+    returns: numpy array of float RGB images with given size
     """
     thumbs = np.array([cv2.resize(img, size) for img in image_array])
     thumbs = thumbs / 255
     thumbs = np.flip(thumbs, -1)    
     return thumbs
 
-def get_sklearn_data(img_array):
+def get_sklearn_data(img_arr):
     """
     Return an array of flattened images from an image array.
     """
-    if len(img_array) == 0:
+    if len(img_arr) == 0:
         return np.array([])
-    img_array = img_array.reshape((img_array.shape[0], -1))
-    return img_array
+    return img_arr.reshape((img_arr.shape[0], -1))
 
 def get_clusters(data, scaler, decomposer, clusterer):
     """
     Perform scaling, dimensional reduction and cluster analysis on th given data.
     Return the array of cluster labels and the dimensionally reduced data.
     """
-    if scaler is not None:
-        data_scaled = scaler.fit_transform(data)
-    else:
-        data_scaled = data.copy()
+    data_scaled = scaler.fit_transform(data) if scaler is not None else data.copy()
     data_decomposed = decomposer.fit_transform(data_scaled)
     clusters = clusterer.fit_predict(data_decomposed)
     return clusters, data_decomposed
 
-def show_cluster_plot(clusters, data_decomposed, img_array):
-    """
-    Visualise the result of a cluster analysis based on cluster labels,
-    the dimensionally reduced data and the original image array.
-    """
-    fig, ax = plt.subplots()
-    ax.scatter(data_decomposed[:, 0], data_decomposed[:, 1], c=clusters)
-    cmap = plt.get_cmap("gist_rainbow")
-    colors = cmap(np.linspace(0, 1, max(clusters) + 1))
-    for idx, img in enumerate(img_array):
-        color = colors[clusters[idx]] if clusters[idx] != -1 else 'white'
-        image_box = OffsetImage(img, zoom=0.4)
-        image_box.image.axes = ax
-        ab = AnnotationBbox(image_box,
-                            (data_decomposed[idx, 0], data_decomposed[idx, 1]),
-                            bboxprops={'facecolor': color})
-        ax.add_artist(ab)                    
-    plt.show()
-
-def show_cluster_plot2(ax, clusters, data, x, y, img_array):
+def show_cluster_plot2(ax, cluster_labels, data, x, y, img_array, display_scale):
     """
     Visualise the result of a cluster analysis based on cluster labels,
     the dimensionally reduced data and the original image array
-    and using the given matplotlib Axes. 
+    and using the given matplotlib Axes.
     """
-    ax.scatter(data[:, x], data[:, y], c=clusters)
+    ax.scatter(data[:, x], data[:, y], c=cluster_labels)  # needed to set plot range
     cmap = plt.get_cmap("gist_rainbow")
-    colors = cmap(np.linspace(0, 1, max(clusters) + 1))
-    for idx, img in enumerate(img_array):
-        color = colors[clusters[idx]] if clusters[idx] != -1 else 'white'
-        image_box = OffsetImage(img, zoom=0.4)
+    colors = cmap(np.linspace(0, 1, max(cluster_labels) + 1))
+    for i, img in enumerate(img_array):
+        color = colors[cluster_labels[i]] if cluster_labels[i] != -1 else 'white'
+        image_box = OffsetImage(img, zoom=display_scale)
         image_box.image.axes = ax
-        ab = AnnotationBbox(image_box, (data[idx, x], data[idx, y]), bboxprops={'facecolor': color})
+        ab = AnnotationBbox(image_box, (data[i, x], data[i, y]), bboxprops={'facecolor': color})
         ab.set_picker(True)
-        ab.set_gid(clusters[idx])
+        ab.set_gid(cluster_labels[i])
         ax.add_artist(ab)
-        
-def show_cluster_plot_for_cluster(ax, clusters, data, x, y, img_array, cluster_number):
+
+def show_cluster_plot_for_cluster(ax, clusters, data, x, y, img_array, cluster_number, display_scale):
     """
-    Visualise the result of a cluster analysis based on cluster labels,
+    Visualise the result of a cluster analysis for on selected cluster,
     the dimensionally reduced data and the original image array
-    and using the given matplotlib Axes. 
+    and using the given matplotlib Axes.
     """
-    data_filtered = data[clusters == cluster_number]
-    img_array_filtered = img_array[clusters == cluster_number]
-    ax.scatter(data_filtered[:, x], data_filtered[:, y])  # , c=clusters)
-    # cmap = plt.get_cmap("gist_rainbow")
-    # colors = cmap(np.linspace(0, 1, max(clusters) + 1))
-    for idx, img in enumerate(img_array_filtered):
-        # color = colors[clusters[idx]] if clusters[idx] != -1 else 'white'
-        image_box = OffsetImage(img, zoom=0.4)
+    data = data[clusters == cluster_number]
+    img_array = img_array[clusters == cluster_number]
+    ax.scatter(data[:, x], data[:, y])  # needed to set plot range
+    for idx, img in enumerate(img_array):
+        image_box = OffsetImage(img, zoom=display_scale)
         image_box.image.axes = ax
-        ab = AnnotationBbox(image_box, (data_filtered[idx, x], data_filtered[idx, y]))  # , bboxprops={'facecolor': color})
-        # ab.set_picker(True)
-        # ab.set_gid(clusters[idx])
+        ab = AnnotationBbox(image_box, (data[idx, x], data[idx, y]))
+        ab.set_picker(False)
+        ab.set_gid(cluster_number)
         ax.add_artist(ab)
 
 def get_workers_from_config():
@@ -124,17 +102,28 @@ def get_workers_from_config():
     """
     with open('image_clustering_config.yml') as hdl:
         conf = yaml.load(hdl, Loader=yaml.Loader)
-    scaler, decomposer, clusterer = conf['scaler'], conf['decomposer'], conf['clusterer']
-    scaler = None if scaler == 'None' else SCALER_DICT[scaler]()
-    if decomposer['type'] == 'TSNE':
-        decomposer = DECOMPOSER_DICT['TSNE']()
-    else:
-        decomposer = DECOMPOSER_DICT[decomposer['type']](n_components=decomposer['components'])
-    if clusterer['type'] == 'DBSCAN':
-        clusterer = DBSCAN(min_samples=clusterer['dbscan_min'], eps=clusterer['dbscan_eps'])
-    else:
-        clusterer = CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
+    clusterer = _init_clusterer(conf)
+    scaler = _init_scaler(conf)
+    decomposer = _init_decomposer(conf)
     return scaler, decomposer, clusterer
+
+def _init_scaler(conf):
+    scaler = conf['scaler']
+    return None if scaler == 'None' else SCALER_DICT[scaler]()
+    
+def _init_decomposer(conf):
+    decomposer = conf['decomposer']
+    if decomposer['type'] == 'TSNE':
+        return DECOMPOSER_DICT['TSNE']()
+    else:
+        return DECOMPOSER_DICT[decomposer['type']](n_components=decomposer['components'])
+        
+def _init_clusterer(conf):
+    clusterer = conf['clusterer']
+    if clusterer['type'] == 'DBSCAN':
+        return DBSCAN(min_samples=clusterer['dbscan_min'], eps=clusterer['dbscan_eps'])
+    else:
+        return CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
 
 def copy_files_by_clusters(folder, clusters):
     files = [file for file in os.scandir(folder) if os.path.isfile(file.path)]
@@ -146,26 +135,12 @@ def copy_files_by_clusters(folder, clusters):
     for cluster, file in zip(clusters, files):
         shutil.copy2(file.path, os.path.join(image_cluster_folder, str(cluster), file.name))
 
-def main():
-    image_array = load_images_from_folder(r"test_images")
-    thumb_array = get_thumbnails(image_array, (150, 100))
-    img_data = get_sklearn_data(thumb_array)
-
-    scaler, decomposer, clusterer = get_workers_from_config()
-
-    clusters, data_decomposed = get_clusters(img_data, scaler, decomposer, clusterer)
-    
-    show_cluster_plot(clusters, data_decomposed, thumb_array)
-
 def main2(ax):
     image_array = load_images_from_folder(r"test_images")
     thumb_array = get_thumbnails(image_array, (150, 100))
     img_data = get_sklearn_data(thumb_array)
-
     scaler, decomposer, clusterer = get_workers_from_config()
-
     clusters, data_decomposed = get_clusters(img_data, scaler, decomposer, clusterer)
-    
     show_cluster_plot2(ax, clusters, data_decomposed, thumb_array)
 
 if __name__ == '__main__':

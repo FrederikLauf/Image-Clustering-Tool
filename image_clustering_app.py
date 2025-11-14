@@ -19,17 +19,21 @@ class ImageLoader(QObject):
     thumb_array = pyqtSignal(np.ndarray)
     image_data = pyqtSignal(np.ndarray)
     
-    def __init__(self, selected_folder):
+    def __init__(self, selected_folder, image_scaling):
         super().__init__()
         self.selected_folder = selected_folder
+        self.image_scaling = image_scaling
 
     def load_image_data(self):
         image_array = imc.load_images_from_folder(self.selected_folder)
-        thumb_array = imc.get_thumbnails(image_array, (150, 100))
+        m = self.image_scaling
+        n = int(2 * m / 3)
+        thumb_array = imc.get_thumbnails(image_array, (m, n))
         image_data = imc.get_sklearn_data(thumb_array)
         self.thumb_array.emit(thumb_array)
         self.image_data.emit(image_data)
         self.finished.emit()
+
 
 class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
 
@@ -51,6 +55,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.thumb_array = None
         self.worker = None
         self.thread = None
+        # init state
+        self.display_state = ['all', None]
 
     # ---------utility methods-----------------------------------------------------------------
 
@@ -58,12 +64,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         thumb = event.artist
         cluster = thumb.get_gid()
         self._plot_single_cluster(cluster)
-
-    def _handle_thumb_array(self, thumb_array):
-        self.thumb_array = thumb_array
-
-    def _handle_image_data(self, image_data):
-        self.img_data = image_data
+        self.display_state = ['single', cluster]
     
     def _show_warning_message(self, text):
         msg_box = QMessageBox()
@@ -90,35 +91,45 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             n_clusters = int(self.nClustersLineEdit.text())
             dbscan_min = int(self.dbscanMinLineEdit.text())
             dbscan_eps = float(self.dbscanEpsLineEdit.text())
+            image_scaling = int(self.preScalingLabel.text())
         except ValueError as e:
             self._show_warning_message("Input values could not be interpreted. Please enter valid parameters. (Hint: {})".format(e))
             return None
-        config = {'scaler': scaler,
+        config = {'image_scaling': image_scaling,
+                  'scaler': scaler,
                   'decomposer': {'type': decomposer, 'components': components},
                   'clusterer': {'type': clusterer, 'n_clusters': n_clusters, 'dbscan_min': dbscan_min, 'dbscan_eps': dbscan_eps}}
         with open('image_clustering_config.yml', 'w') as hdl:
             hdl.write(yaml.dump(config))
         return config
 
-    def _plot_clusters(self):
+    def _plot_all_clusters(self):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
             x = self.xDimensionScrollbar.value()
             y = self.yDimensionScrollbar.value()
+            display_scale = float(self.displayScalingLabel.text())
             self._static_ax.cla()
             imc.show_cluster_plot2(self._static_ax,
                                    self.current_cluster_labels, self.data_decomposed,
-                                   x, y, self.thumb_array)
+                                   x, y, self.thumb_array, display_scale)
             self.static_canvas.draw()
             
     def _plot_single_cluster(self, cluster_number):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
             x = self.xDimensionScrollbar.value()
             y = self.yDimensionScrollbar.value()
+            display_scale = float(self.displayScalingLabel.text())
             self._static_ax.cla()
             imc.show_cluster_plot_for_cluster(self._static_ax,
                                               self.current_cluster_labels, self.data_decomposed,
-                                              x, y, self.thumb_array, cluster_number)
+                                              x, y, self.thumb_array, cluster_number, display_scale)
             self.static_canvas.draw()
+            
+    def _plot_cluster_view(self):
+        if self.display_state[0] == 'all':
+            self._plot_all_clusters()
+        elif self.display_state[0] == 'single':
+            self._plot_single_cluster(self.display_state[1])
 
     # ---------callback methods-----------------------------------------------------------------
 
@@ -132,23 +143,25 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self.current_cluster_labels = None
             self.img_data = None
             self.thumb_array = None
+            self.display_state = ['all', None]
             # initiate loading of images
             self.selectFolderButton.setEnabled(False)
             self.selectFolderButton.setText("select folder (currently loading {}, please wait)".format(selected_folder))
             self.selectFolderButton.repaint()
-            self.worker = ImageLoader(selected_folder)
+            image_scaling = int(self.preScalingLabel.text())
+            self.worker = ImageLoader(selected_folder, image_scaling)
             self.thread = QThread()
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.load_image_data)
-            self.worker.thumb_array.connect(self._handle_thumb_array)
-            self.worker.image_data.connect(self._handle_image_data)
+            self.worker.thumb_array.connect(lambda data: setattr(self, 'thumb_array', data))
+            self.worker.image_data.connect(lambda data: setattr(self, 'img_data', data))
             self.worker.finished.connect(self.thread.quit)
             self.worker.finished.connect(self.worker.deleteLater)
             self.thread.finished.connect(self.thread.deleteLater)
             self.thread.finished.connect(lambda: self.selectFolderButton.setEnabled(True))
             self.thread.finished.connect(lambda: self.selectFolderButton.setText("select folder (currently {})".format(selected_folder)))
             self.thread.start()
-        
+
     def on_export_button_clicked(self):
         if self.selected_folder != '' and self.current_cluster_labels is not None:
             imc.copy_files_by_clusters(self.selected_folder, self.current_cluster_labels)
@@ -156,6 +169,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self._show_warning_message("No clusters to export. Please select an image folder and apply clustering first.")
 
     def on_apply_button_clicked(self):
+        self.display_state = ['all', None]
         if self.thumb_array is None or self.img_data is None:
             self._show_warning_message("No data to analyse. Please select an image folder first.")
             return
@@ -172,17 +186,24 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self.yDimensionScrollbar.setValue(1)
             self.xDimensionScrollbar.setMaximum(components - 1)
             self.yDimensionScrollbar.setMaximum(components - 1)
-            self._plot_clusters()
+            self._plot_all_clusters()
         except Exception as e:
             self._show_warning_message("Image clustering failed. Please adjust input parameters. (Hint: {})".format(e))
 
     def on_x_dimension_scrollbar_changed(self, new_value):
         self.xDimensionLabel.setText(str(new_value))
-        self._plot_clusters()
+        self._plot_cluster_view()
         
     def on_y_dimension_scrollbar_changed(self, new_value):
         self.yDimensionLabel.setText(str(new_value))
-        self._plot_clusters()
+        self._plot_cluster_view()
+        
+    def on_display_scaling_slider_changed(self, new_value):
+        self.displayScalingLabel.setText(str(new_value / 100))
+        self._plot_cluster_view()
+            
+    def on_prescaling_slider_changed(self, new_value):
+        self.preScalingLabel.setText(str(new_value))
 
 
 def main():

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>995</width>
-    <height>634</height>
+    <width>1196</width>
+    <height>743</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -337,6 +337,82 @@
      </widget>
     </item>
     <item>
+     <widget class="QWidget" name="widget" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>image size (after selecting new folder)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="preScalingLabel">
+         <property name="text">
+          <string>150</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>px</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="preScalingSlider">
+         <property name="maximum">
+          <number>500</number>
+         </property>
+         <property name="singleStep">
+          <number>10</number>
+         </property>
+         <property name="pageStep">
+          <number>10</number>
+         </property>
+         <property name="value">
+          <number>150</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>image display scaling</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="displayScalingLabel">
+         <property name="text">
+          <string>0.5</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="displayScalingSlider">
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="pageStep">
+          <number>1</number>
+         </property>
+         <property name="value">
+          <number>50</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <widget class="QPushButton" name="selectFolderButton">
       <property name="text">
        <string>select folder</string>
@@ -443,6 +519,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>displayScalingSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_display_scaling_slider_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>778</x>
+     <y>529</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>479</x>
+     <y>334</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>preScalingSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_prescaling_slider_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>529</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>479</x>
+     <y>334</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_apply_button_clicked()</slot>
@@ -450,5 +558,7 @@
   <slot>on_export_button_clicked()</slot>
   <slot>on_x_dimension_scrollbar_changed(int)</slot>
   <slot>on_y_dimension_scrollbar_changed(int)</slot>
+  <slot>on_prescaling_slider_changed(int)</slot>
+  <slot>on_display_scaling_slider_changed(int)</slot>
  </slots>
 </ui>

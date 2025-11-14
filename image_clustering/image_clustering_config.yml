@@ -7,3 +7,4 @@ decomposer:
   components: 15
   type: PCA
 scaler: Normalizer
+image_scaling: 0.025
