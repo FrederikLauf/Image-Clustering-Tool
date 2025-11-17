@@ -46,7 +46,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         super(ImageClusteringApp, self).__init__(parent)
         self.setupUi(self)
         # init canvas
-        self.static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+        self.static_canvas = FigureCanvas(Figure(layout='tight'))
         self.static_canvas.mpl_connect('pick_event', self._on_cluster_representative_clicked)
         self.matplotlibBaseLayout.addWidget(NavigationToolbar(self.static_canvas, self))
         self.matplotlibBaseLayout.addWidget(self.static_canvas)
