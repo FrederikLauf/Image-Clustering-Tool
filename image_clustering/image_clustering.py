@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import os
 import shutil
-from typing import Iterable
 
 import cv2
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
@@ -13,6 +12,8 @@ from sklearn.decomposition import PCA, NMF
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler, Normalizer
 import yaml
+import cProfile
+from PIL import Image
 
 
 SCALER_DICT = {'Standard': StandardScaler, 'Robust': RobustScaler, 'MinMax': MinMaxScaler, 'Normalizer': Normalizer}
@@ -65,29 +66,46 @@ class ImageClusteringConfiguration:
         else:
             return CLUSTERER_DICT[clusterer['type']](n_clusters=clusterer['n_clusters'])
 
+def _load_images_pil(files, size):
+    images = [Image.open(file) for file in files]
+    _ = [img.draft('RGB', size) for img in images]
+    with ThreadPoolExecutor() as executor:
+        image_generator = executor.map(np.asarray, images)
+    return image_generator
 
-def load_images_from_folder(folder):
-    """
-    Read image files as uint8 and BGR from the given folder
-    and return them in a generator.
-    """
+def _get_thumbnails_pil(image_generator, size):
+    with ThreadPoolExecutor() as executor:
+        thumbnail_generator = executor.map(lambda x: cv2.resize(x, size), image_generator)
+    thumbs =  np.array(list(thumbnail_generator))
+    thumbs = thumbs / 255
+    return thumbs
+    
+def _load_images_cv(files):
+    with ThreadPoolExecutor() as executor:
+        image_generator = executor.map(cv2.imread, files)
+    return image_generator
+    
+def _get_thumbnails_cv(image_generator, size):
+    with ThreadPoolExecutor() as executor:
+        thumbnail_generator = executor.map(lambda x: cv2.resize(x, size), image_generator)
+    thumbs =  np.array(list(thumbnail_generator))
+    thumbs = thumbs / 255
+    thumbs = np.flip(thumbs, -1)
+    return thumbs
+
+def load_images_from_folder_pil(folder, size=(150, 100)):
     files = [file.path for file in os.scandir(folder) if os.path.isfile(file.path)]
     files = [path for path in files if path.split('.')[-1].lower() in FILE_TYPES]
-    with ThreadPoolExecutor() as executor:
-        image_array = executor.map(cv2.imread, files)
-    return image_array
-
-
-def get_thumbnails(image_array, size):
-    """ 
-    image_array: iterable of uint8 BGR images
-    size: tuple of desired image size (width, height) in pixels
-    returns: numpy array of float RGB images with given size
-    """
-    thumbs = np.array([cv2.resize(img, size) for img in image_array])
-    thumbs = thumbs / 255
-    thumbs = np.flip(thumbs, -1)    
-    return thumbs
+    image_generator = _load_images_pil(files, size)
+    thumbnails = _get_thumbnails_pil(image_generator, size)
+    return thumbnails
+    
+def load_images_from_folder_cv(folder, size=(150, 100)):
+    files = [file.path for file in os.scandir(folder) if os.path.isfile(file.path)]
+    files = [path for path in files if path.split('.')[-1].lower() in FILE_TYPES]
+    image_generator = _load_images_cv(files)
+    thumbnails = _get_thumbnails_cv(image_generator, size)
+    return thumbnails
 
 
 def get_sklearn_data(img_arr):
@@ -159,7 +177,15 @@ def copy_files_by_clusters(folder, clusters):
 
 
 if __name__ == '__main__':
-    image_array = load_images_from_folder(r"C:\Users\Frederik\Pictures\Fremde\Berlin")
-    orig = np.array(list(image_array))
-    thumbs = get_thumbnails(image_array, (150, 100))
-    # print(thumbs)
+    # cProfile.run('load_images_from_folder("C:/Users/Frederik/Pictures/Fremde/Schweden")', sort='time')
+    # cProfile.run('load_images_from_folder2("C:/Users/Frederik/Pictures/Fremde/Schweden")', sort='time')
+    # cProfile.run('load_images_from_folder_cv("C:/Users/Frederik/Pictures/Fremde/Schweden")', sort='time')
+    # cProfile.run('load_images_from_folder_pil("C:/Users/Frederik/Pictures/Fremde/Schweden")', sort='time')
+    thumbs_cv = load_images_from_folder_cv(r"C:\Users\Frederik\Pictures\Fremde\Berlin")
+    print(thumbs_cv[0, 0, 0])
+    thumbs_pil = load_images_from_folder_pil(r"C:\Users\Frederik\Pictures\Fremde\Berlin")
+    print(thumbs_pil[0, 0, 0])
+    plt.imshow(thumbs_cv[1])
+    plt.show()
+    plt.imshow(thumbs_pil[1])
+    plt.show()

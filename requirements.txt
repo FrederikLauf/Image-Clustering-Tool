@@ -1,0 +1,6 @@
+pyyaml
+numpy
+matplotlib
+opencv-python
+scikit-learn
+pyqt6

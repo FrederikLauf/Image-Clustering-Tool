@@ -1,10 +1,11 @@
+import os
 import sys
 
 import cv2
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 # from matplotlib.backends.qt_compat import QtWidgets
-from matplotlib.figure import Figure
 import numpy as np
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QMainWindow
@@ -14,11 +15,13 @@ import gui.gui_form
 import image_clustering.image_clustering as imc
 
 
+FILE_TYPES = ['bmp', 'pbm', 'pgm', 'ppm', 'sr', 'ras', 'jpeg', 'jpg', 'jpe', 'jp2', 'tiff', 'tif', 'png'] 
+
+
 class ImageLoader(QObject):
 
     finished = pyqtSignal()
     thumb_array = pyqtSignal(np.ndarray)
-    orig_array = pyqtSignal(list)
     image_data = pyqtSignal(np.ndarray)
 
     def __init__(self, selected_folder, image_scaling):
@@ -27,14 +30,11 @@ class ImageLoader(QObject):
         self.image_scaling = image_scaling
 
     def load_image_data(self):
-        image_array = imc.load_images_from_folder(self.selected_folder)
         m = self.image_scaling
         n = int(2 * m / 3)
-        orig_array = list(image_array)
-        thumb_array = imc.get_thumbnails(orig_array, (m, n))
+        thumb_array = imc.load_images_from_folder_pil(self.selected_folder, (m, n))
         image_data = imc.get_sklearn_data(thumb_array)
         self.thumb_array.emit(thumb_array)
-        self.orig_array.emit(orig_array)
         self.image_data.emit(image_data)
         self.finished.emit()
 
@@ -57,32 +57,20 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.data_decomposed = None
         self.img_data = None
         self.thumb_array = None
-        self.orig_array = None
         self.worker = None
         self.thread = None
         # init state
         self.display_state = ['all', None]
 
-    # ---------utility methods-----------------------------------------------------------------
-
-    def _on_cluster_representative_clicked(self, event):
-        if self.display_state[0] == 'all':
-            thumb = event.artist
-            cluster = thumb.get_gid()
-            self._plot_single_cluster(cluster)
-            self.display_state = ['single', cluster]
-        elif self.display_state[0] == 'single':
-            cluster = self.display_state[1]
-            thumb = event.artist
-            i = thumb.get_gid()
-            filtered_orig_array = []
-            for idx, img in enumerate(self.orig_array):
-                if self.current_cluster_labels[idx] == cluster:
-                    filtered_orig_array.append(img)
-            image = filtered_orig_array[i]
-            cv2.namedWindow("Image_" + str(i), cv2.WINDOW_NORMAL)
-            cv2.imshow("Image_" + str(i), image)
-            cv2.waitKey(1)
+    # ---------utility methods------------------------------------------------------------------
+    
+    def _deinit_data_and_view(self):
+        self._static_ax.cla()
+        self.static_canvas.draw()
+        self.current_cluster_labels = None
+        self.img_data = None
+        self.thumb_array = None
+        self.display_state = ['all', None]
 
     def _show_warning_message(self, text):
         msg_box = QMessageBox()
@@ -120,6 +108,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         with open('image_clustering_config.yml', 'w') as hdl:
             hdl.write(yaml.dump(config))
         return config
+        
+    # ----------plotting methods----------------------------------------------------------------
 
     def _plot_all_clusters(self):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
@@ -148,17 +138,29 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self._plot_all_clusters()
         elif self.display_state[0] == 'single':
             self._plot_single_cluster(self.display_state[1])
-            
-    def _deinit_data_and_view(self):
-        self._static_ax.cla()
-        self.static_canvas.draw()
-        self.current_cluster_labels = None
-        self.img_data = None
-        self.thumb_array = None
-        self.orig_array = None
-        self.display_state = ['all', None]
 
-    # ---------callback methods-----------------------------------------------------------------
+    # #---------callback methods----------------------------------------------------------------
+    
+    # ---------matplotlib-----------------------------------------------------------------------
+    
+    def _on_cluster_representative_clicked(self, event):
+        if self.display_state[0] == 'all':
+            thumb = event.artist
+            cluster = thumb.get_gid()
+            self._plot_single_cluster(cluster)
+            self.display_state = ['single', cluster]
+        elif self.display_state[0] == 'single':
+            cluster = self.display_state[1]
+            thumb = event.artist
+            i = thumb.get_gid()
+            files = [file.path for file in os.scandir(self.selected_folder) if os.path.isfile(file.path)]
+            files = [path for path in files if path.split('.')[-1].lower() in FILE_TYPES]
+            filtered_files = [e[1] for e in enumerate(files) if self.current_cluster_labels[e[0]] == cluster]
+            image = cv2.imread(filtered_files[i])
+            cv2.namedWindow("Image_" + str(i), cv2.WINDOW_NORMAL)
+            cv2.imshow("Image_" + str(i), image)
+            
+    # -------Qt---------------------------------------------------------------------------------
 
     def on_select_folder_button_clicked(self):
         selected_folder = self._get_folder_path()  # TEST empty folder
@@ -175,7 +177,6 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.load_image_data)
             self.worker.thumb_array.connect(lambda data: setattr(self, 'thumb_array', data))
-            self.worker.orig_array.connect(lambda data: setattr(self, 'orig_array', data))
             self.worker.image_data.connect(lambda data: setattr(self, 'img_data', data))
             self.worker.finished.connect(self.thread.quit)
             self.worker.finished.connect(self.worker.deleteLater)
