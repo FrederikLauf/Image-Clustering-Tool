@@ -12,25 +12,24 @@ import image_clustering.image_clustering as ic
 
 class TestImageClustering:
     
-    def test_load_images_from_folder(self):
-        image_array = ic.load_images_from_folder('test_data')
-        red_image = list(image_array)[0]
+    def test_load_images_from_folder_pil(self):
+        thumbnail_array = ic.load_images_from_folder_pil('test_data', (200, 100))
+        red_image = thumbnail_array[0]
         assert type(red_image) == np.ndarray
-        assert np.all(red_image[0, 0] == np.array([0, 0, 255]))
-    
-    def test_get_thumbnails(self):
-        image_array = ic.load_images_from_folder('test_data')
-        thumbs = ic.get_thumbnails(image_array, (50, 50))
-        red_thumb = thumbs[0]
-        assert type(thumbs) == np.ndarray
-        assert np.all(red_thumb[0, 0] == np.array([1.0, 0.0, 0.0]))
+        assert red_image.shape == (100, 200, 3)
+        assert np.all(red_image[0, 0] == np.array([1.0, 0.0, 0.0]))
+        
+    def test_load_images_from_folder_cv(self):
+        thumbnail_array = ic.load_images_from_folder_cv('test_data', (200, 100))
+        red_image = thumbnail_array[0]
+        assert type(red_image) == np.ndarray
+        assert red_image.shape == (100, 200, 3)
+        assert np.all(red_image[0, 0] == np.array([1.0, 0.0, 0.0]))
         
     def test_get_sklearn_data(self):
-        image_array = ic.load_images_from_folder('test_data')
-        thumbs = ic.get_thumbnails(image_array, (50, 50))
+        thumbs = ic.load_images_from_folder_pil('test_data', (200, 100))
         data = ic.get_sklearn_data(thumbs)
-        m, n = data.shape
-        assert (m, n) == (1, 7500)
+        assert data.shape == (1, 60000)
         
     def test_get_workers_from_config(self):
         icc = ic.ImageClusteringConfiguration.from_config_file()
