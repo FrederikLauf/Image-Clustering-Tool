@@ -2,16 +2,19 @@
 A tool for explorative image clustering, using algorithms for unsupervised machine learning provided by scikit-learn.
 
 The result is visualised on a matplotlib frame as clusters of image thumbnails with coloured frames indicating the cluster membership.
-(The plot is two-dimensional, but the viewing direction onto the higher-dimensional data can be selected via scrollbars.)
+The plot is two-dimensional, but the viewing direction onto the higher-dimensional data can be selected via scrollbars.
 
 The clusters can be exported, i.e. the original images are copied to different subfolders according to their cluster membership.
 
-By clicking on a representative of a cluster, this cluster is singled out and re-plotted with adapted scaling, for better inspection. (The original view is recovered by clicking on "apply" or using the scoll bars.)
+For better inspection, a cluster can be singled out and is re-plotted by clicking on a representative.
+Clicking on an image in this view opens the orignal image in a separate window.
+(The view of all clusters is recovered by clicking on "apply" or using the scoll bars.)
 
 The GUI is invoked by running image_clustering_app.py.
 
-** Example screenshot
-[[file:demo/demo_screenshot.png]]
+** Example screenshots
+[[file:demo/demo_screenshot_1.png]]
+[[file:demo/demo_screenshot_2.png]]
 
 ** Input fields and other control elements on the GUI
 - Scaler :: Select the scaler, which is applied to the data first.
@@ -25,3 +28,5 @@ The GUI is invoked by running image_clustering_app.py.
 - apply :: Perform and display clustering analysis on the currently selected images according to the current inputs.
 - export :: Copy the original images into a subfolder of their current folder, distributed over further subfolders according to their cluster membership.
 - scrollbars :: Select the dimension of the reduced data to be displayed on the respective axis of the plot.
+- slider "image size" :: Determine the size of the image thumbnails which are loaded and used as the data for clustering. For value n, the images are sized to (n, 2n/3) regardless of their original format.
+- slider "image display scaling" ::  Scale the size of the thumbnails shown in the plot.
