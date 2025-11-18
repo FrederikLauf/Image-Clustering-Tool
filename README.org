@@ -8,7 +8,7 @@ The clusters can be exported, i.e. the original images are copied to different s
 
 For better inspection, a cluster can be singled out and is re-plotted by clicking on a representative.
 Clicking on an image in this view opens the orignal image in a separate window.
-(The view of all clusters is recovered by clicking on "apply" or using the scoll bars.)
+(The view of all clusters is recovered by re-applying the cluster analysis with the "apply" button.)
 
 The GUI is invoked by running image_clustering_app.py.
 
