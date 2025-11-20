@@ -30,3 +30,4 @@ The GUI is invoked by running image_clustering_app.py.
 - scrollbars :: Select the dimension of the reduced data to be displayed on the respective axis of the plot.
 - slider "image size" :: Determine the size of the image thumbnails which are loaded and used as the data for clustering. For value n, the images are sized to (n, 2n/3) regardless of their original format.
 - slider "image display scaling" ::  Scale the size of the thumbnails shown in the plot.
+  - check box "on release" ::  Scale the size of the thumbnails shown in the plot only on release of the slider (less performance challenging).
