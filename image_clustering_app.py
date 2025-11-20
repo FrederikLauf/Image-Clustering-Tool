@@ -64,7 +64,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
 
     # ---------utility methods------------------------------------------------------------------
     
-    def _deinit_data_and_view(self):
+    def _reinit_data_and_view(self):
         self._static_ax.cla()
         self.static_canvas.draw()
         self.current_cluster_labels = None
@@ -84,9 +84,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         file_dialog.setFileMode(QFileDialog.FileMode.Directory)
         file_dialog.setViewMode(QFileDialog.ViewMode.Detail)
         selected_folder = file_dialog.getExistingDirectory()
-        if selected_folder == '':
-            return None
-        return selected_folder
+        if selected_folder != '':
+            return selected_folder
 
     def _make_config_from_input(self):
         try:
@@ -111,29 +110,23 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         
     # ----------plotting methods----------------------------------------------------------------
 
-    def _plot_all_clusters(self):
+    def _plot_all_clusters(self, x, y, display_scale):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
-            x = self.xDimensionScrollbar.value()
-            y = self.yDimensionScrollbar.value()
-            display_scale = float(self.displayScalingLabel.text())
-            self._static_ax.cla()
-            imc.show_cluster_plot2(self._static_ax,
-                                   self.current_cluster_labels, self.data_decomposed,
-                                   x, y, self.thumb_array, display_scale)
+            imc.show_cluster_plot(self._static_ax,
+                self.current_cluster_labels, self.data_decomposed, x, y, self.thumb_array, display_scale)
             self.static_canvas.draw()
 
-    def _plot_single_cluster(self, cluster_number):
+    def _plot_single_cluster(self, cluster_number, x, y, display_scale):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
-            x = self.xDimensionScrollbar.value()
-            y = self.yDimensionScrollbar.value()
-            display_scale = float(self.displayScalingLabel.text())
-            self._static_ax.cla()
             imc.show_cluster_plot_for_cluster(self._static_ax,
-                                              self.current_cluster_labels, self.data_decomposed,
-                                              x, y, self.thumb_array, cluster_number, display_scale)
+                self.current_cluster_labels, self.data_decomposed, x, y, self.thumb_array, cluster_number, display_scale)
             self.static_canvas.draw()
 
     def _plot_cluster_view(self):
+        x = self.xDimensionScrollbar.value()
+        y = self.yDimensionScrollbar.value()
+        display_scale = float(self.displayScalingLabel.text())
+        self._static_ax.cla()
         if self.display_state[0] == 'all':
             self._plot_all_clusters()
         elif self.display_state[0] == 'single':
@@ -145,14 +138,12 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
     
     def _on_cluster_representative_clicked(self, event):
         if self.display_state[0] == 'all':
-            thumb = event.artist
-            cluster = thumb.get_gid()
-            self._plot_single_cluster(cluster)
+            cluster = event.artist.get_gid()
             self.display_state = ['single', cluster]
+            self._plot_cluster_view()
         elif self.display_state[0] == 'single':
             cluster = self.display_state[1]
-            thumb = event.artist
-            i = thumb.get_gid()
+            i = event.artist.get_gid()
             files = [file.path for file in os.scandir(self.selected_folder) if os.path.isfile(file.path)]
             files = [path for path in files if path.split('.')[-1].lower() in FILE_TYPES]
             filtered_files = [e[1] for e in enumerate(files) if self.current_cluster_labels[e[0]] == cluster]
@@ -165,8 +156,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
     def on_select_folder_button_clicked(self):
         selected_folder = self._get_folder_path()  # TEST empty folder
         if selected_folder is not None:
-            self._deinit_data_and_view()
             self.selected_folder = selected_folder
+            self._reinit_data_and_view()
             # initiate loading of images
             self.selectFolderButton.setEnabled(False)
             self.selectFolderButton.setText("select folder (currently loading {}, please wait)".format(selected_folder))

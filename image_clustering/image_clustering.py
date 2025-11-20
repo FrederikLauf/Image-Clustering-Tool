@@ -128,7 +128,7 @@ def get_clusters(data, scaler, decomposer, clusterer):
     return clusters, data_decomposed
 
 
-def show_cluster_plot2(ax, cluster_labels, data, x, y, img_array, display_scale):
+def show_cluster_plot(ax, cluster_labels, data, x, y, img_array, display_scale):
     """
     Visualise the result of a cluster analysis based on cluster labels,
     the dimensionally reduced data and the original image array
@@ -177,15 +177,4 @@ def copy_files_by_clusters(folder, clusters):
 
 
 if __name__ == '__main__':
-    # cProfile.run('load_images_from_folder("C:/Users/Frederik/Pictures/Fremde/Schweden")', sort='time')
-    # cProfile.run('load_images_from_folder2("C:/Users/Frederik/Pictures/Fremde/Schweden")', sort='time')
-    # cProfile.run('load_images_from_folder_cv("C:/Users/Frederik/Pictures/Fremde/Schweden")', sort='time')
-    # cProfile.run('load_images_from_folder_pil("C:/Users/Frederik/Pictures/Fremde/Schweden")', sort='time')
-    thumbs_cv = load_images_from_folder_cv(r"C:\Users\Frederik\Pictures\Fremde\Berlin")
-    print(thumbs_cv[0, 0, 0])
-    thumbs_pil = load_images_from_folder_pil(r"C:\Users\Frederik\Pictures\Fremde\Berlin")
-    print(thumbs_pil[0, 0, 0])
-    plt.imshow(thumbs_cv[1])
-    plt.show()
-    plt.imshow(thumbs_pil[1])
-    plt.show()
+    pass
