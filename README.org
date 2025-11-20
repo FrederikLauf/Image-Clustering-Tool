@@ -24,7 +24,7 @@ The GUI is invoked by running image_clustering_app.py.
   - n_clusters :: Enter the desired number of resulting clusters (irrelevant for clusterer "DBSCAN").
   - dbscan_min :: Enter the minimal cluster size for DBSCAN (irrelevant for other clusterers).  
   - dbscan_eps :: Enter the eps parameter ("cluster density") for DBSCAN (irrelevant for other clusterers).
-- select folder :: Select a folder containing only image files for analysis.
+- select folder :: Select a folder with image files for analysis.
 - apply :: Perform and display clustering analysis on the currently selected images according to the current inputs.
 - export :: Copy the original images into a subfolder of their current folder, distributed over further subfolders according to their cluster membership.
 - scrollbars :: Select the dimension of the reduced data to be displayed on the respective axis of the plot.
