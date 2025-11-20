@@ -223,6 +223,9 @@ class Ui_MainWindow(object):
         self.displayScalingSlider.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.displayScalingSlider.setObjectName("displayScalingSlider")
         self.horizontalLayout_4.addWidget(self.displayScalingSlider)
+        self.onReleaseCheckBox = QtWidgets.QCheckBox(parent=self.widget)
+        self.onReleaseCheckBox.setObjectName("onReleaseCheckBox")
+        self.horizontalLayout_4.addWidget(self.onReleaseCheckBox)
         self.verticalLayout.addWidget(self.widget)
         self.selectFolderButton = QtWidgets.QPushButton(parent=self.centralwidget)
         self.selectFolderButton.setObjectName("selectFolderButton")
@@ -246,6 +249,7 @@ class Ui_MainWindow(object):
         self.yDimensionScrollbar.valueChanged['int'].connect(MainWindow.on_y_dimension_scrollbar_changed) # type: ignore
         self.displayScalingSlider.valueChanged['int'].connect(MainWindow.on_display_scaling_slider_changed) # type: ignore
         self.preScalingSlider.valueChanged['int'].connect(MainWindow.on_prescaling_slider_changed) # type: ignore
+        self.displayScalingSlider.sliderReleased.connect(MainWindow.on_display_scaling_slider_released) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -275,11 +279,12 @@ class Ui_MainWindow(object):
         self.dbscanMinLineEdit.setText(_translate("MainWindow", "2"))
         self.label_6.setText(_translate("MainWindow", "dbscan_eps"))
         self.dbscanEpsLineEdit.setText(_translate("MainWindow", "1"))
-        self.label_8.setText(_translate("MainWindow", "image size (after selecting new folder)"))
+        self.label_8.setText(_translate("MainWindow", "image size (when selecting new folder)"))
         self.preScalingLabel.setText(_translate("MainWindow", "150"))
         self.label_10.setText(_translate("MainWindow", "px"))
         self.label_9.setText(_translate("MainWindow", "image display scaling"))
         self.displayScalingLabel.setText(_translate("MainWindow", "0.5"))
+        self.onReleaseCheckBox.setText(_translate("MainWindow", "on release"))
         self.selectFolderButton.setText(_translate("MainWindow", "select folder"))
         self.applyButton.setText(_translate("MainWindow", "apply"))
         self.exportButton.setText(_translate("MainWindow", "export"))

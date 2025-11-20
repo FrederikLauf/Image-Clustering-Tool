@@ -342,7 +342,7 @@
        <item>
         <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>image size (after selecting new folder)</string>
+          <string>image size (when selecting new folder)</string>
          </property>
         </widget>
        </item>
@@ -406,6 +406,13 @@
          </property>
          <property name="orientation">
           <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="onReleaseCheckBox">
+         <property name="text">
+          <string>on release</string>
          </property>
         </widget>
        </item>
@@ -551,6 +558,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>displayScalingSlider</sender>
+   <signal>sliderReleased()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_display_scaling_slider_released()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>923</x>
+     <y>603</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>597</x>
+     <y>371</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_apply_button_clicked()</slot>
@@ -560,5 +583,6 @@
   <slot>on_y_dimension_scrollbar_changed(int)</slot>
   <slot>on_prescaling_slider_changed(int)</slot>
   <slot>on_display_scaling_slider_changed(int)</slot>
+  <slot>on_display_scaling_slider_released()</slot>
  </slots>
 </ui>

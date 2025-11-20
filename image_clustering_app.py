@@ -128,9 +128,9 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         display_scale = float(self.displayScalingLabel.text())
         self._static_ax.cla()
         if self.display_state[0] == 'all':
-            self._plot_all_clusters()
+            self._plot_all_clusters(x, y, display_scale)
         elif self.display_state[0] == 'single':
-            self._plot_single_cluster(self.display_state[1])
+            self._plot_single_cluster(self.display_state[1], x, y, display_scale)
 
     # #---------callback methods----------------------------------------------------------------
     
@@ -200,7 +200,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self.yDimensionScrollbar.setValue(1)
             self.xDimensionScrollbar.setMaximum(components - 1)
             self.yDimensionScrollbar.setMaximum(components - 1)
-            self._plot_all_clusters()
+            self._plot_cluster_view()
         except Exception as e:
             self._show_warning_message("Image clustering failed. Please adjust input parameters. (Hint: {})".format(e))
 
@@ -214,7 +214,12 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
 
     def on_display_scaling_slider_changed(self, new_value):
         self.displayScalingLabel.setText(str(new_value / 100))
-        self._plot_cluster_view()
+        if not self.onReleaseCheckBox.isChecked():
+            self._plot_cluster_view()
+            
+    def on_display_scaling_slider_released(self):
+        if self.onReleaseCheckBox.isChecked():
+            self._plot_cluster_view()
 
     def on_prescaling_slider_changed(self, new_value):
         self.preScalingLabel.setText(str(new_value))
