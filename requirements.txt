@@ -2,5 +2,6 @@ pyyaml
 numpy
 matplotlib
 opencv-python
+Pillow
 scikit-learn
 pyqt6
