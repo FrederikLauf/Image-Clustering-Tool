@@ -61,6 +61,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.thread = None
         # init state
         self.display_state = ['all', None]
+        self.axis_state = 'on'
 
     # ---------utility methods------------------------------------------------------------------
     
@@ -77,6 +78,14 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         msg_box.setWindowTitle("Warning")
         msg_box.setText(text)
         msg_box.exec()
+
+    def _set_axis_visibility(self):
+        if self.axis_state == 'off':
+            self._static_ax.set_axis_off()
+        elif self.axis_state == 'on':
+            self._static_ax.set_axis_on()
+        self.static_canvas.figure.tight_layout()
+        self.static_canvas.draw()
 
     def _get_folder_path(self):
         file_dialog = QFileDialog(self)
@@ -114,13 +123,11 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
             imc.show_cluster_plot(self._static_ax,
                 self.current_cluster_labels, self.data_decomposed, x, y, self.thumb_array, display_scale)
-            self.static_canvas.draw()
 
     def _plot_single_cluster(self, cluster_number, x, y, display_scale):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
             imc.show_cluster_plot_for_cluster(self._static_ax,
                 self.current_cluster_labels, self.data_decomposed, x, y, self.thumb_array, cluster_number, display_scale)
-            self.static_canvas.draw()
 
     def _plot_cluster_view(self):
         x = self.xDimensionScrollbar.value()
@@ -131,11 +138,13 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             self._plot_all_clusters(x, y, display_scale)
         elif self.display_state[0] == 'single':
             self._plot_single_cluster(self.display_state[1], x, y, display_scale)
+        self.static_canvas.draw()
+        self._set_axis_visibility()
 
     # #---------callback methods----------------------------------------------------------------
     
     # ---------matplotlib-----------------------------------------------------------------------
-    
+
     def _on_cluster_representative_clicked(self, event):
         if self.display_state[0] == 'all':
             cluster = event.artist.get_gid()
@@ -220,6 +229,10 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
     def on_display_scaling_slider_released(self):
         if self.onReleaseCheckBox.isChecked():
             self._plot_cluster_view()
+            
+    def on_axis_off_on_button_clicked(self):
+        self.axis_state = 'on' if self.axis_state == 'off' else 'off'
+        self._set_axis_visibility()
 
     def on_prescaling_slider_changed(self, new_value):
         self.preScalingLabel.setText(str(new_value))
