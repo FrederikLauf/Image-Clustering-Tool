@@ -31,19 +31,16 @@ class ImageClusteringConfiguration:
 
     @classmethod
     def from_config_file(cls):
-        return cls(*cls.get_workers_from_config())
-
-    @classmethod
-    def get_workers_from_config(cls):
-        """
-        Return initialised scaler, decomposer and clusterer as given in the config file.
-        """
         with open('image_clustering_config.yml') as hdl:
             conf = yaml.load(hdl, Loader=yaml.Loader)
         clusterer = cls._init_clusterer(conf)
         scaler = cls._init_scaler(conf)
         decomposer = cls._init_decomposer(conf)
-        return scaler, decomposer, clusterer
+        return cls(scaler, decomposer, clusterer)
+
+    @classmethod
+    def from_values(cls, **values):
+        pass        
 
     @staticmethod
     def _init_scaler(conf):

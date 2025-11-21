@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1196</width>
-    <height>743</height>
+    <width>1190</width>
+    <height>730</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -416,6 +416,13 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="axisOffOnButton">
+         <property name="text">
+          <string>axis off/on</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -574,6 +581,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>axisOffOnButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_axis_off_on_button_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1134</x>
+     <y>588</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>594</x>
+     <y>364</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_apply_button_clicked()</slot>
@@ -584,5 +607,6 @@
   <slot>on_prescaling_slider_changed(int)</slot>
   <slot>on_display_scaling_slider_changed(int)</slot>
   <slot>on_display_scaling_slider_released()</slot>
+  <slot>on_axis_off_on_button_clicked()</slot>
  </slots>
 </ui>
