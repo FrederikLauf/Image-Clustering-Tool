@@ -67,7 +67,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
     
     def _reinit_data_and_view(self):
         self._static_ax.cla()
-        self.static_canvas.draw()
+        self._set_axis_visibility()
         self.current_cluster_labels = None
         self.img_data = None
         self.thumb_array = None
@@ -163,7 +163,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
     # -------Qt---------------------------------------------------------------------------------
 
     def on_select_folder_button_clicked(self):
-        selected_folder = self._get_folder_path()  # TEST empty folder
+        selected_folder = self._get_folder_path()
         if selected_folder is not None:
             self.selected_folder = selected_folder
             self._reinit_data_and_view()
