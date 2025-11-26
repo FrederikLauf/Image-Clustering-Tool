@@ -226,6 +226,16 @@ class Ui_MainWindow(object):
         self.onReleaseCheckBox = QtWidgets.QCheckBox(parent=self.widget)
         self.onReleaseCheckBox.setObjectName("onReleaseCheckBox")
         self.horizontalLayout_4.addWidget(self.onReleaseCheckBox)
+        self.label_11 = QtWidgets.QLabel(parent=self.widget)
+        self.label_11.setObjectName("label_11")
+        self.horizontalLayout_4.addWidget(self.label_11)
+        self.frameAlphaSlider = QtWidgets.QSlider(parent=self.widget)
+        self.frameAlphaSlider.setMaximum(100)
+        self.frameAlphaSlider.setSingleStep(10)
+        self.frameAlphaSlider.setProperty("value", 100)
+        self.frameAlphaSlider.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.frameAlphaSlider.setObjectName("frameAlphaSlider")
+        self.horizontalLayout_4.addWidget(self.frameAlphaSlider)
         self.axisOffOnButton = QtWidgets.QPushButton(parent=self.widget)
         self.axisOffOnButton.setObjectName("axisOffOnButton")
         self.horizontalLayout_4.addWidget(self.axisOffOnButton)
@@ -254,6 +264,7 @@ class Ui_MainWindow(object):
         self.preScalingSlider.valueChanged['int'].connect(MainWindow.on_prescaling_slider_changed) # type: ignore
         self.displayScalingSlider.sliderReleased.connect(MainWindow.on_display_scaling_slider_released) # type: ignore
         self.axisOffOnButton.clicked.connect(MainWindow.on_axis_off_on_button_clicked) # type: ignore
+        self.frameAlphaSlider.valueChanged['int'].connect(MainWindow.on_frame_alpha_slider_changed) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -289,6 +300,7 @@ class Ui_MainWindow(object):
         self.label_9.setText(_translate("MainWindow", "image display scaling"))
         self.displayScalingLabel.setText(_translate("MainWindow", "0.5"))
         self.onReleaseCheckBox.setText(_translate("MainWindow", "on release"))
+        self.label_11.setText(_translate("MainWindow", "frames"))
         self.axisOffOnButton.setText(_translate("MainWindow", "axis off/on"))
         self.selectFolderButton.setText(_translate("MainWindow", "select folder"))
         self.applyButton.setText(_translate("MainWindow", "apply"))

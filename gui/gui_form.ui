@@ -417,6 +417,29 @@
         </widget>
        </item>
        <item>
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>frames</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="frameAlphaSlider">
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="singleStep">
+          <number>10</number>
+         </property>
+         <property name="value">
+          <number>100</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="axisOffOnButton">
          <property name="text">
           <string>axis off/on</string>
@@ -597,6 +620,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>frameAlphaSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_frame_alpha_slider_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1001</x>
+     <y>588</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>594</x>
+     <y>364</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_apply_button_clicked()</slot>
@@ -608,5 +647,6 @@
   <slot>on_display_scaling_slider_changed(int)</slot>
   <slot>on_display_scaling_slider_released()</slot>
   <slot>on_axis_off_on_button_clicked()</slot>
+  <slot>on_frame_alpha_slider_changed(int)</slot>
  </slots>
 </ui>

@@ -7,13 +7,12 @@ import cv2
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 from sklearn.decomposition import PCA, NMF
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler, Normalizer
 import yaml
-import cProfile
-from PIL import Image
 
 
 SCALER_DICT = {'Standard': StandardScaler, 'Robust': RobustScaler, 'MinMax': MinMaxScaler, 'Normalizer': Normalizer}
@@ -37,10 +36,6 @@ class ImageClusteringConfiguration:
         scaler = cls._init_scaler(conf)
         decomposer = cls._init_decomposer(conf)
         return cls(scaler, decomposer, clusterer)
-
-    @classmethod
-    def from_values(cls, **values):
-        pass        
 
     @staticmethod
     def _init_scaler(conf):
@@ -76,7 +71,7 @@ def _get_thumbnails_pil(image_generator, size):
     thumbs =  np.array(list(thumbnail_generator))
     thumbs = thumbs / 255
     return thumbs
-    
+
 def _load_images_cv(files):
     with ThreadPoolExecutor() as executor:
         image_generator = executor.map(cv2.imread, files)
@@ -124,42 +119,54 @@ def get_clusters(data, scaler, decomposer, clusterer):
     clusters = clusterer.fit_predict(data_decomposed)
     return clusters, data_decomposed
 
+class ImageClusterPlotter:
+    
+    def __init__(self, ax):
+        self.cmap = plt.get_cmap("gist_rainbow")
+        self.frame_alpha = 1.0
+        self.ax = ax
 
-def show_cluster_plot(ax, cluster_labels, data, x, y, img_array, display_scale):
-    """
-    Visualise the result of a cluster analysis based on cluster labels,
-    the dimensionally reduced data and the original image array
-    and using the given matplotlib Axes.
-    """
-    ax.scatter(data[:, x], data[:, y], c=cluster_labels)  # needed to set plot range
-    cmap = plt.get_cmap("gist_rainbow")
-    colors = cmap(np.linspace(0, 1, max(cluster_labels) + 1))
-    for i, img in enumerate(img_array):
-        color = colors[cluster_labels[i]] if cluster_labels[i] != -1 else 'white'
-        image_box = OffsetImage(img, zoom=display_scale)
-        image_box.image.axes = ax
-        ab = AnnotationBbox(image_box, (data[i, x], data[i, y]), bboxprops={'facecolor': color})
-        ab.set_picker(True)
-        ab.set_gid(cluster_labels[i])
-        ax.add_artist(ab)
+    def show_cluster_plot(self, cluster_labels, data, x, y, img_array, display_scale):
+        """
+        Visualise the result of a cluster analysis based on cluster labels,
+        the dimensionally reduced data and the original image array
+        and using the given matplotlib Axes.
+        """
+        self.ax.scatter(data[:, x], data[:, y], c=cluster_labels)  # needed to set plot range
+        cmap = self.cmap
+        colors = cmap(np.linspace(0, 1, max(cluster_labels) + 1))
+        for i, img in enumerate(img_array):
+            color = colors[cluster_labels[i]] if cluster_labels[i] != -1 else 'white'
+            image_box = OffsetImage(img, zoom=display_scale)
+            image_box.image.axes = self.ax
+            props = {'facecolor': color, 'edgecolor': color, 'alpha': self.frame_alpha}
+            ab = AnnotationBbox(image_box, (data[i, x], data[i, y]), bboxprops=props)
+            ab.set(gid=cluster_labels[i], picker=True)
+            self.ax.add_artist(ab)
 
-
-def show_cluster_plot_for_cluster(ax, clusters, data, x, y, img_array, cluster_number, display_scale):
-    """
-    Visualise the result of a cluster analysis for on selected cluster,
-    the dimensionally reduced data and the original image array
-    and using the given matplotlib Axes.
-    """
-    data = data[clusters == cluster_number]
-    img_array = img_array[clusters == cluster_number]
-    ax.scatter(data[:, x], data[:, y])  # needed to set plot range
-    for i, img in enumerate(img_array):
-        image_box = OffsetImage(img, zoom=display_scale)
-        image_box.image.axes = ax
-        ab = AnnotationBbox(image_box, (data[i, x], data[i, y]))
-        ab.set_picker(False)
-        ab.set_gid(i)
-        ax.add_artist(ab)
+    def show_cluster_plot_for_cluster(self, clusters, data, x, y, img_array, cluster_number, display_scale):
+        """
+        Visualise the result of a cluster analysis for on selected cluster,
+        the dimensionally reduced data and the original image array
+        and using the given matplotlib Axes.
+        """
+        data = data[clusters == cluster_number]
+        img_array = img_array[clusters == cluster_number]
+        self.ax.scatter(data[:, x], data[:, y])  # needed to set plot range
+        for i, img in enumerate(img_array):
+            image_box = OffsetImage(img, zoom=display_scale)
+            image_box.image.axes = self.ax
+            props = {'facecolor': 'white', 'edgecolor': 'white', 'alpha': self.frame_alpha}
+            ab = AnnotationBbox(image_box, (data[i, x], data[i, y]), bboxprops=props)
+            ab.set(gid=i, picker=True)
+            self.ax.add_artist(ab)
+            
+    def set_frame_alpha_value(self, alpha):
+        abs = [e for e in self.ax.get_children() if type(e) == AnnotationBbox]
+        for ab in abs:
+            ab.update({'alpha': alpha})
+            self.ax.draw_artist(ab)
+        self.frame_alpha = alpha
 
 
 def copy_files_by_clusters(folder, clusters):

@@ -38,7 +38,6 @@ class ImageLoader(QObject):
         self.image_data.emit(image_data)
         self.finished.emit()
 
-
 class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
 
     def __init__(self, parent=None):
@@ -51,6 +50,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.matplotlibBaseLayout.addWidget(NavigationToolbar(self.static_canvas, self))
         self.matplotlibBaseLayout.addWidget(self.static_canvas)
         self._static_ax = self.static_canvas.figure.subplots()
+        self.icp = imc.ImageClusterPlotter(self._static_ax)
         # init data
         self.selected_folder = None
         self.current_cluster_labels = None
@@ -64,7 +64,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.axis_state = 'on'
 
     # ---------utility methods------------------------------------------------------------------
-    
+
     def _reinit_data_and_view(self):
         self._static_ax.cla()
         self._set_axis_visibility()
@@ -116,18 +116,33 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         with open('image_clustering_config.yml', 'w') as hdl:
             hdl.write(yaml.dump(config))
         return config
-        
+
+    def _perform_clustering(self):
+        icc = imc.ImageClusteringConfiguration.from_config_file()
+        try:
+            clusters, data_decomposed = imc.get_clusters(self.img_data, icc.scaler, icc.decomposer, icc.clusterer)
+            self.current_cluster_labels = clusters
+            self.data_decomposed = data_decomposed
+            components = len(self.data_decomposed[0])
+            self.xDimensionScrollbar.setValue(0)
+            self.yDimensionScrollbar.setValue(1)
+            self.xDimensionScrollbar.setMaximum(components - 1)
+            self.yDimensionScrollbar.setMaximum(components - 1)
+            self._plot_cluster_view()
+        except Exception as e:
+            self._show_warning_message("Image clustering failed. Please adjust input parameters. (Hint: {})".format(e))
+
     # ----------plotting methods----------------------------------------------------------------
 
     def _plot_all_clusters(self, x, y, display_scale):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
-            imc.show_cluster_plot(self._static_ax,
-                self.current_cluster_labels, self.data_decomposed, x, y, self.thumb_array, display_scale)
+            self.icp.show_cluster_plot(self.current_cluster_labels, self.data_decomposed, x, y,
+            self.thumb_array, display_scale)
 
     def _plot_single_cluster(self, cluster_number, x, y, display_scale):
         if all(i is not None for i in (self.current_cluster_labels, self.data_decomposed, self.thumb_array)):
-            imc.show_cluster_plot_for_cluster(self._static_ax,
-                self.current_cluster_labels, self.data_decomposed, x, y, self.thumb_array, cluster_number, display_scale)
+            self.icp.show_cluster_plot_for_cluster(self.current_cluster_labels, self.data_decomposed, x, y,
+            self.thumb_array, cluster_number, display_scale)
 
     def _plot_cluster_view(self):
         x = self.xDimensionScrollbar.value()
@@ -142,7 +157,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self._set_axis_visibility()
 
     # #---------callback methods----------------------------------------------------------------
-    
+
     # ---------matplotlib-----------------------------------------------------------------------
 
     def _on_cluster_representative_clicked(self, event):
@@ -159,7 +174,7 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             image = cv2.imread(filtered_files[i])
             cv2.namedWindow("Image_" + str(i), cv2.WINDOW_NORMAL)
             cv2.imshow("Image_" + str(i), image)
-            
+
     # -------Qt---------------------------------------------------------------------------------
 
     def on_select_folder_button_clicked(self):
@@ -196,22 +211,9 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         if self.thumb_array is None or self.img_data is None:
             self._show_warning_message("No data to analyse. Please select an image folder first.")
             return
-        config = self._make_config_from_input()
-        if config is None:
+        if self._make_config_from_input() is None:
             return
-        try:
-            icc = imc.ImageClusteringConfiguration.from_config_file()
-            clusters, data_decomposed = imc.get_clusters(self.img_data, icc.scaler, icc.decomposer, icc.clusterer)
-            self.current_cluster_labels = clusters
-            self.data_decomposed = data_decomposed
-            components = len(self.data_decomposed[0])
-            self.xDimensionScrollbar.setValue(0)
-            self.yDimensionScrollbar.setValue(1)
-            self.xDimensionScrollbar.setMaximum(components - 1)
-            self.yDimensionScrollbar.setMaximum(components - 1)
-            self._plot_cluster_view()
-        except Exception as e:
-            self._show_warning_message("Image clustering failed. Please adjust input parameters. (Hint: {})".format(e))
+        self._perform_clustering()
 
     def on_x_dimension_scrollbar_changed(self, new_value):
         self.xDimensionLabel.setText(str(new_value))
@@ -225,11 +227,16 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         self.displayScalingLabel.setText(str(new_value / 100))
         if not self.onReleaseCheckBox.isChecked():
             self._plot_cluster_view()
-            
+
     def on_display_scaling_slider_released(self):
         if self.onReleaseCheckBox.isChecked():
             self._plot_cluster_view()
-            
+
+    def on_frame_alpha_slider_changed(self, new_value):
+        alpha = new_value / 100
+        self.icp.frame_alpha = alpha
+        self._plot_cluster_view()
+
     def on_axis_off_on_button_clicked(self):
         self.axis_state = 'on' if self.axis_state == 'off' else 'off'
         self._set_axis_visibility()
