@@ -37,6 +37,23 @@ class ImageClusteringConfiguration:
         decomposer = cls._init_decomposer(conf)
         return cls(scaler, decomposer, clusterer)
 
+    @classmethod
+    def from_values(cls, **values):
+        conf = {}
+        conf['scaler'] = values['scaler']
+        conf['clusterer'] = {}
+        conf['clusterer']['dbscan_eps'] = values['dbscan_eps']
+        conf['clusterer']['dbscan_min'] = values['dbscan_min']
+        conf['clusterer']['n_clusters'] = values['n_clusters']
+        conf['clusterer']['type'] = values['clusterer_type']
+        conf['decomposer'] = {}
+        conf['decomposer']['components'] = values['components']
+        conf['decomposer']['type'] = values['decomposer_type']
+        clusterer = cls._init_clusterer(conf)
+        scaler = cls._init_scaler(conf)
+        decomposer = cls._init_decomposer(conf)
+        return cls(scaler, decomposer, clusterer)
+
     @staticmethod
     def _init_scaler(conf):
         scaler = conf['scaler']

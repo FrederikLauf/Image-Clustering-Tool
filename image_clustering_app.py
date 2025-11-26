@@ -95,8 +95,8 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
         selected_folder = file_dialog.getExistingDirectory()
         if selected_folder != '':
             return selected_folder
-
-    def _make_config_from_input(self):
+            
+    def _read_config_input_values(self):
         try:
             scaler = self.scalerComboBox.currentText()
             decomposer = self.decomposerComboBox.currentText()
@@ -106,16 +106,21 @@ class ImageClusteringApp(QMainWindow, gui.gui_form.Ui_MainWindow):
             dbscan_min = int(self.dbscanMinLineEdit.text())
             dbscan_eps = float(self.dbscanEpsLineEdit.text())
             image_scaling = int(self.preScalingLabel.text())
+            return scaler, decomposer, components, clusterer, n_clusters, dbscan_min, dbscan_eps, image_scaling
         except ValueError as e:
             self._show_warning_message("Input values could not be interpreted. Please enter valid parameters. (Hint: {})".format(e))
-            return None
-        config = {'image_scaling': image_scaling,
-                  'scaler': scaler,
-                  'decomposer': {'type': decomposer, 'components': components},
-                  'clusterer': {'type': clusterer, 'n_clusters': n_clusters, 'dbscan_min': dbscan_min, 'dbscan_eps': dbscan_eps}}
-        with open('image_clustering_config.yml', 'w') as hdl:
-            hdl.write(yaml.dump(config))
-        return config
+
+    def _make_config_from_input(self):
+        values = self._read_config_input_values()
+        if values is not None:
+            scaler, decomposer, components, clusterer, n_clusters, dbscan_min, dbscan_eps, image_scaling = values
+            config = {'image_scaling': image_scaling}
+            config['scaler'] = scaler
+            config['decomposer'] = {'type': decomposer, 'components': components}
+            config['clusterer'] = {'type': clusterer, 'n_clusters': n_clusters, 'dbscan_min': dbscan_min, 'dbscan_eps': dbscan_eps}
+            with open('image_clustering_config.yml', 'w') as hdl:
+                hdl.write(yaml.dump(config))
+            return config
 
     def _perform_clustering(self):
         icc = imc.ImageClusteringConfiguration.from_config_file()
